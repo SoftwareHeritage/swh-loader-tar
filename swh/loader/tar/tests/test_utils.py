@@ -7,10 +7,10 @@ import unittest
 
 from nose.tools import istest
 
-from swh.loader.tar import producer
+from swh.loader.tar import utils
 
 
-class TestProducer(unittest.TestCase):
+class TestUtils(unittest.TestCase):
     @istest
     def compute_basic_release_number(self):
         files = {
@@ -54,7 +54,7 @@ class TestProducer(unittest.TestCase):
 
         # then
         for f in files.keys():
-            rel_num = producer.release_number(f)
+            rel_num = utils.release_number(f)
             self.assertEquals(
                 files[f],
                 rel_num,
