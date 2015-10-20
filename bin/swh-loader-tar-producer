@@ -185,17 +185,11 @@ def compute_message_from(conf, tarball):
     release = compute_release(filename, tarpath)
 
     task = tasks.LoadTarRepository()
-    # task.apply_async((tarball,
-    #                   origin,
-    #                   REVISION,
-    #                   release,
-    #                   occurrences))
-
-    task.run(tarball,
-             origin,
-             REVISION,
-             release,
-             occurrences)
+    task.apply_async((tarball.to_dict(),
+                      origin,
+                      REVISION,
+                      release,
+                      occurrences))
 
 
 def produce_archive_messages(conf, path):

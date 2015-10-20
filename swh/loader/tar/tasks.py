@@ -7,6 +7,7 @@ import shutil
 import tempfile
 
 from swh.loader.dir import tasks
+from swh.loader.tar.tarball import Tarball
 
 
 class LoadTarRepository(tasks.LoadDirRepository):
@@ -20,20 +21,24 @@ class LoadTarRepository(tasks.LoadDirRepository):
         'extraction_dir': ('str', '/tmp/swh.loader.tar/'),
     }
 
-    def run(self, tarball, origin, revision, release, occurrences):
-        """Import a tarball tar_path.
+    def run(self, tarball_dict, origin, revision, release, occurrences):
+        """Import a tarball into swh.
 
         Args:
-            - tarball: a tarball object
+            - tarball: a tarball object as dictionary.  FIXME: improve this
             - origin, revision, release, occurrences: see LoadDirRepository.run
 
         """
+        archive = Tarball(tarball_dict['nature'],
+                          tarball_dict['name'],
+                          tarball_dict['path'])
+
         extraction_dir = self.config['extraction_dir']
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                     dir=extraction_dir)
 
-        self.log.info('Uncompress %s to %s' % (tarball.path, dir_path))
-        tarball.extract(dir_path)
+        self.log.info('Uncompress %s to %s' % (archive.path, dir_path))
+        archive.extract(dir_path)
 
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'

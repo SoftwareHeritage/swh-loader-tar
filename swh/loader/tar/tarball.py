@@ -52,3 +52,10 @@ class Tarball():
         m = _module_fn[self.nature]
         with m.open(self.path) as archive:
             archive.extractall(path=dir_path)
+
+    def to_dict(self):
+        return {
+            'nature': self.nature,
+            'path': self.path,
+            'name': self.name
+        }
