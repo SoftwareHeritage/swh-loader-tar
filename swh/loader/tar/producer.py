@@ -73,6 +73,6 @@ def _software_name(filename):
     """
     m = software_name_pattern.match(filename)
     res = m.group()
-    if digit_pattern.match(res[-1]):  # remains first version number
+    if res and digit_pattern.match(res[-1]):  # remains first version number
         return res[0:-1]
     return res
