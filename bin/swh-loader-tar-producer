@@ -7,7 +7,6 @@
 
 import sys
 import os
-import tarfile
 import datetime
 
 from swh.core import config
@@ -204,9 +203,9 @@ def produce_archive_messages(conf, path):
     LIMIT = conf['limit']
     count = 0
 
-    for tarball in list_archives_from(path):
+    for archive in list_archives_from(path):
         count += 1
-        compute_message_from(conf, tarball)
+        compute_message_from(conf, archive)
         if LIMIT and count >= LIMIT:
             return count
 
