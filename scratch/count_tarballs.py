@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 
 import os
+import tarfile
+import zipfile
 
-from swh.loader.tar import producer
 
+def is_tarball(filepath):
+    """Determine if the filepath is an tarball or not.
 
-def is_tarball(filename):
-    """Determine if the filename is an tarball or not.
-
-    This is dependent on the filename only.
+    This is dependent on the filepath only.
 
     Args:
-        filename: the filename without any paths.
+        filepath: the filepath without any paths.
 
     Returns:
         Boolean True if an tarball, False otherwise.
 
     """
-    return any(map(lambda ext: filename.endswith(ext),
-                   producer.archive_extension_patterns))
+
+    return tarfile.is_tarfile(filepath) or zipfile.is_zipfile(filepath)
+
 
 def list_tarballs_from(path):
     """From path, produce tarball tarball message to celery.
@@ -29,8 +30,10 @@ def list_tarballs_from(path):
     """
     for dirpath, dirnames, filenames in os.walk(path):
         for fname in filenames:
-            if is_tarball(fname):
+            tarpath = os.path.join(dirpath, fname)
+            if os.path.exists(tarpath) and is_tarball(tarpath):
                 yield dirpath, fname
+
 
 def count_tarballs_from(path):
     count = 0
@@ -38,6 +41,7 @@ def count_tarballs_from(path):
         count += 1
 
     return count
+
 
 if __name__ == '__main__':
     for path in ['/home/storage/space/mirrors/gnu.org/gnu',
