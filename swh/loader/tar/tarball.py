@@ -7,9 +7,25 @@ import tarfile
 import zipfile
 
 
-_module_fn = {
-    'tar': tarfile,
-    'zip': zipfile
+def uncompress_zip(tarpath, dirpath):
+    """Uncompress zip adapter function.
+
+    """
+    with zipfile.ZipFile(tarpath) as z:
+        z.extractall(path=dirpath)
+
+
+def uncompress_tar(tarpath, dirpath):
+    """Uncompress tar adapter function.
+
+    """
+    with tarfile.open(tarpath) as t:
+        t.extractall(path=dirpath)
+
+
+_uncompress_fn = {
+    'tar': uncompress_tar,
+    'zip': uncompress_zip
 }
 
 
@@ -49,9 +65,7 @@ class Tarball():
                tar_path: the path to access the tarball
                dir_path: The path where to extract the tarball's content.
         """
-        m = _module_fn[self.nature]
-        with m.open(self.path) as archive:
-            archive.extractall(path=dir_path)
+        _uncompress_fn[self.nature](self.path, dir_path)
 
     def to_dict(self):
         return {
