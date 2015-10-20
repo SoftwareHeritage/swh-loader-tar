@@ -11,7 +11,7 @@ import tarfile
 import datetime
 
 from swh.core import config
-from swh.loader.tar import producer, tasks
+from swh.loader.tar import utils, tasks, tarball
 
 
 # Static setup
@@ -128,7 +128,7 @@ def compute_release(filename, tarpath):
             - comment: ''
 
     """
-    release_number = producer.release_number(filename)
+    release_number = utils.release_number(filename)
     if release_number:
         return {
             'name': release_number,
@@ -151,11 +151,17 @@ def list_archives_from(path):
     for dirpath, dirnames, filenames in os.walk(path):
         for fname in filenames:
             tarpath = os.path.join(dirpath, fname)
-            if os.path.exists(tarpath) and tarfile.is_tarfile(tarpath):
-                yield dirpath, fname
+            if not os.path.exists(tarpath):
+                continue
+
+            tarball_nature = tarball.nature(tarpath)
+            if not tarball_nature:
+                continue
+
+            yield tarball.Tarball(tarball_nature, fname, tarpath)
 
 
-def compute_message_from(conf, dirpath, filename):
+def compute_message_from(conf, tarball):
     """Post the message to workers.
 
     Args:
@@ -167,7 +173,8 @@ def compute_message_from(conf, dirpath, filename):
         None
 
     """
-    tarpath = os.path.join(dirpath, filename)
+    tarpath = tarball.path
+    filename = tarball.name
     root_dirpath = conf['mirror_root_directory']
 
     origin = compute_origin(conf['url_scheme'],
@@ -177,12 +184,18 @@ def compute_message_from(conf, dirpath, filename):
     occurrences = [gnu_occurrence(tarpath), swh_occurrence(tarpath)]
     release = compute_release(filename, tarpath)
 
-    task = tasks.LoadTarRepository()  # tasks.LoadTarRepositoryPrint()
-    task.apply_async((tarpath,
-                      origin,
-                      REVISION,
-                      release,
-                      occurrences))
+    task = tasks.LoadTarRepository()
+    # task.apply_async((tarball,
+    #                   origin,
+    #                   REVISION,
+    #                   release,
+    #                   occurrences))
+
+    task.run(tarball,
+             origin,
+             REVISION,
+             release,
+             occurrences)
 
 
 def produce_archive_messages(conf, path):
@@ -197,9 +210,9 @@ def produce_archive_messages(conf, path):
     LIMIT = conf['limit']
     count = 0
 
-    for dirpath, filename in list_archives_from(path):
+    for tarball in list_archives_from(path):
         count += 1
-        compute_message_from(conf, dirpath, filename)
+        compute_message_from(conf, tarball)
         if LIMIT and count >= LIMIT:
             return count
 
