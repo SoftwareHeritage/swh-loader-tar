@@ -53,6 +53,8 @@ class Tarball():
     - name: tar file's name
     - path: absolute path to tarball
 
+    FIXME: does not permit filtering
+    https://docs.python.org/3.4/library/shutil.html#archiving-operations
     """
     def __init__(self, nature, name, path):
         self.nature = nature
