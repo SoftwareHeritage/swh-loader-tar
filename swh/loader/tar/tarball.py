@@ -49,6 +49,10 @@ def nature(tarpath):
 class Tarball():
     """SWH tarball representation.
 
+    - nature: tar, zip supported
+    - name: tar file's name
+    - path: absolute path to tarball
+
     """
     def __init__(self, nature, name, path):
         self.nature = nature
