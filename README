@@ -7,15 +7,24 @@ tarball and inject into the SWH dataset all unknown contained files.
 Configuration sample
 ====================
 
-### tar
+### Tarball loader
 
-tar.ini:
+#### Configuration
+
+This is the loader's (or task's) configuration file.
+
+loader/tar.ini:
 
     [main]
-    dir_path = /tmp/swh/loader/tar/
 
+    # the path where to extract the tarball before loading it into swh
+    extraction_dir = /home/storage/tmp/
+
+    # access to swh's storage
     storage_class = remote_storage
     storage_args = http://localhost:5000/
+
+    # parameters to condition loading into swh storage
     send_contents = True
     send_directories = True
     send_revisions = True
@@ -33,11 +42,9 @@ Present in possible locations:
 - ~/.swh/loader/tar.ini
 - /etc/softwareheritage/loader/tar.ini
 
-### Load tarball
-
 #### toplevel
 
-Directly from code or toplevel:
+Load tarball directly from code or toplevel:
 
     from swh.loader.tar.tasks import LoadTarRepository
     from swh.loader.tar import tarball
@@ -56,6 +63,8 @@ Directly from code or toplevel:
     LoadTarRepository().run(archive, origin, revision, release, [occurrence])
 
 #### celery
+
+Load tarball using celery.
 
 Providing you have a properly configured celery up and running
 
@@ -95,7 +104,7 @@ You can send the following message to the task queue:
                                      release,
                                      [occurrence]))
 
-### Produce tarball messages
+#### Batch tarball loading
 
 Message producer's configuration file:
 
