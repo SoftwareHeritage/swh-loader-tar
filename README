@@ -9,7 +9,7 @@ Configuration sample
 
 ### tar
 
-Sample tar.ini:
+tar.ini:
 
     [main]
     dir_path = /tmp/swh/loader/tar/
@@ -37,14 +37,82 @@ Present in possible locations:
 
 #### toplevel
 
+Directly from code or toplevel:
+
     from swh.loader.tar.tasks import LoadTarRepository
-    LoadTarRepository().run('/path/to/tarball.tgz')
+    from swh.loader.tar import tarball
+
+    # fill in those
+    archive = tarball.Tarball('tar',
+                              'blah-7.8.3.tgz',
+                              '/some/path/to/blah-7.8.3.tgz')
+
+    # Fill in those
+    origin = {}
+    release = None
+    revision = {}
+    occurrence = {}
+
+    LoadTarRepository().run(archive, origin, revision, release, [occurrence])
 
 #### celery
 
-Providing you have a celery up and running
-(cf. https://forge.softwareheritage.org/diffusion/DCORE/browse/master/README.md)
+Providing you have a properly configured celery up and running
+
+worker.ini needs to be updated with the following keys:
+
+    task_modules = swh.loader.tar.tasks
+    task_queues = swh_loader_tar
+
+cf. https://forge.softwareheritage.org/diffusion/DCORE/browse/master/README.md
+for more details
+
+You can send the following message to the task queue:
 
     from swh.loader.tar.tasks import LoadTarRepository
-    LoadTarRepository().delay('/path/to/tarball.tgz')
+    from swh.loader.tar import tarball
 
+    # either this one
+    # archive_dict = {'nature': 'tar',
+    #                 'name': 'blah-7.8.3.tgz',
+    #                 'path': '/some/path/to/blah-7.8.3.tgz'}
+
+    # or this one
+    archive_dict = tarball.Tarball('tar',
+                                   'blah-7.8.3.tgz',
+                                   '/some/path/to/blah-7.8.3.tgz').to_dict()
+
+    # Fill in those
+    origin = {}
+    release = None
+    revision = {}
+    occurrence = {}
+
+    # Send message to the task queue
+    LoadTarRepository().apply_async((archive_dict,
+                                     origin,
+                                     revision,
+                                     release,
+                                     [occurrence]))
+
+### Produce tarball messages
+
+Message producer's configuration file:
+
+    [main]
+
+    # mirror's root directory holding tarballs to load into swh
+    mirror_root_directory = /home/storage/space/mirrors/gnu.org/gnu/
+
+    # url scheme prefix used to create the origin url
+    url_scheme = http://ftp.gnu.org/gnu/
+
+    # origin type used for those tarballs
+    type = ftp
+
+    # For tryouts purposes (no limit if commented or omitted)
+    # limit = 1
+
+Trigger the message computations:
+
+    swh-loader-tar-producer ~/.swh/producer/tar.ini
