@@ -1,5 +1,5 @@
-<swh-loader-tar> (0.0.1-1) unstable; urgency=low
+swh-loader-tar (0.0.1-1) unstable; urgency=low
 
-  *
+  * Bootstrap version
 
- -- AUTHOR-NAME <AUTHOR-EMAIL>  <UTC-DATE>
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 21 Oct 2015 12:18:16 +0200
