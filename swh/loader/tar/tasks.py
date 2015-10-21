@@ -25,7 +25,7 @@ class LoadTarRepository(tasks.LoadDirRepository):
         """Import a tarball into swh.
 
         Args:
-            - tarball: a tarball object as dictionary.  FIXME: improve this
+            - tarball: a tarball object as dictionary.
             - origin, revision, release, occurrences: see LoadDirRepository.run
 
         """
@@ -37,13 +37,13 @@ class LoadTarRepository(tasks.LoadDirRepository):
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                     dir=extraction_dir)
 
-        self.log.info('Uncompress %s to %s' % (archive.path, dir_path))
-        archive.extract(dir_path)
-
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'
 
         try:
+            self.log.info('Uncompress %s to %s' % (archive.path, dir_path))
+            archive.extract(dir_path)
+
             super().run(dir_path, origin, revision, release, occurrences)
         finally:  # always clean up
             # FIXME: some files not properly cleaned up due to permission error
