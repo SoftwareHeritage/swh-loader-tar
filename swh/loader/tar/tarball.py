@@ -39,6 +39,10 @@ def _uncompress_tar(tarpath, dirpath):
 def uncompress(tarpath, dest):
     """Uncompress tarpath to dest.
 
+    FIXME: Beware badly formatted archive (with / and .., cf.
+    https://docs.python.org/3.4/library/tarfile.html#tarfile.TarFile.extractall
+    warning).
+
     """
     if tarfile.is_tarfile(tarpath):
         _uncompress_tar(tarpath, dest)
