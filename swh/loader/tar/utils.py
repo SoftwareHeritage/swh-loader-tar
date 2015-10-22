@@ -47,6 +47,17 @@ def _extension(filename):
         return m.group()
 
 
+def _software_name(filename):
+    """Compute the software name from the filename.
+
+    """
+    m = software_name_pattern.match(filename)
+    res = m.group()
+    if res and digit_pattern.match(res[-1]):  # remains first version number
+        return res[0:-1]
+    return res
+
+
 def release_number(filename):
     """Compute the release number from the filename.
 
@@ -68,17 +79,6 @@ def release_number(filename):
             return None
         return version
     return None
-
-
-def _software_name(filename):
-    """Compute the software name from the filename.
-
-    """
-    m = software_name_pattern.match(filename)
-    res = m.group()
-    if res and digit_pattern.match(res[-1]):  # remains first version number
-        return res[0:-1]
-    return res
 
 
 def commonname(path0, path1, as_str=False):
