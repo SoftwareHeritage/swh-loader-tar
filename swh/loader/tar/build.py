@@ -13,8 +13,9 @@ from swh.loader.tar import utils
 EPOCH = 0
 UTC_OFFSET = '+0000'
 SWH_PERSON = 'Software Heritage'
-SWH_MAIL = 'robot@swh.org'
-REVISION_MESSAGE = 'synthetic message'
+SWH_MAIL = 'robot@softwareheritage.org'
+REVISION_MESSAGE = 'synthetic revision message'
+RELEASE_MESSAGE = 'synthetic release message'
 REVISION_TYPE = 'tar'
 REVISION = {
     'author_date': EPOCH,
@@ -143,8 +144,8 @@ def compute_release(filename, tarpath):
             'name': release_number,
             'date': _time_from_path(tarpath),
             'offset': UTC_OFFSET,
-            'author_name': '',
-            'author_email': '',
-            'comment': '',
+            'author_name': SWH_PERSON,
+            'author_email': SWH_MAIL,
+            'comment': RELEASE_MESSAGE,
         }
     return None

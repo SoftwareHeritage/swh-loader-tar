@@ -67,9 +67,9 @@ class TestBuildUtils(unittest.TestCase):
             'name': '1.2.3rc1',
             'date': 'some-time',
             'offset': build.UTC_OFFSET,
-            'author_name': '',
-            'author_email': '',
-            'comment': '',
+            'author_name': build.SWH_PERSON,
+            'author_email': build.SWH_MAIL,
+            'comment': build.RELEASE_MESSAGE,
         }
 
         # when
