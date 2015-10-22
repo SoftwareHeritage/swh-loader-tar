@@ -50,7 +50,13 @@ def _extension(filename):
 def release_number(filename):
     """Compute the release number from the filename.
 
+    Args:
+        filename: filename as string or bytes.
+
     """
+    if isinstance(filename, bytes):
+        filename = filename.decode('utf-8')
+
     name = _software_name(filename)
     ext = _extension(filename)
     if not ext:
