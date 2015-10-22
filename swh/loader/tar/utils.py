@@ -54,9 +54,6 @@ def release_number(filename):
         filename: filename as string or bytes.
 
     """
-    if isinstance(filename, bytes):
-        filename = filename.decode('utf-8')
-
     name = _software_name(filename)
     ext = _extension(filename)
     if not ext:
@@ -88,8 +85,4 @@ def commonname(path0, path1, as_str=False):
     """Compute the commonname between the path0 and path1.
 
     """
-    res = path1.split(path0)[1]
-
-    if as_str and isinstance(res, bytes):
-        return res.decode('utf-8')
-    return res
+    return path1.split(path0)[1]

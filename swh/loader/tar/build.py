@@ -47,7 +47,7 @@ def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
        - type: origin's type
 
     """
-    relative_path = utils.commonname(root_dirpath, tarpath, as_str=True)
+    relative_path = utils.commonname(root_dirpath, tarpath)
     return {
         'url': os.path.join(url_scheme,
                             os.path.dirname(relative_path)),

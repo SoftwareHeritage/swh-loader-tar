@@ -58,12 +58,6 @@ class TestUtils(unittest.TestCase):
             'direvent-latest.tar.gz': ('direvent-latest', None, '.tar.gz'),
         }
 
-        cls.files_bytes = {
-            b'free-ipmi-1.2.2.tar': ('free-ipmi-', '1.2.2', '.tar'),
-            b'free-ipmi-1.2.2.tar.gz': ('free-ipmi-', '1.2.2', '.tar.gz'),
-            b'free-ipmi-1.2.2.tar.tgz': ('free-ipmi-', '1.2.2', '.tar.tgz'),
-        }
-
     @istest
     def release_number(self):
         for f in self.files:
@@ -72,18 +66,6 @@ class TestUtils(unittest.TestCase):
 
             # then
             _, expected_rel_num, _ = self.files[f]
-            self.assertEquals(
-                actual_rel_num,
-                expected_rel_num,
-                'for %s, the version should be %s' % (f, expected_rel_num))
-
-        # can deal with bytes too... ish
-        for f in self.files_bytes:
-            # when
-            actual_rel_num = utils.release_number(f)
-
-            # then
-            _, expected_rel_num, _ = self.files_bytes[f]
             self.assertEquals(
                 actual_rel_num,
                 expected_rel_num,
@@ -128,9 +110,3 @@ class TestUtils(unittest.TestCase):
                                               b'/some/where/to/go/to')
         # then
         self.assertEquals(b'go/to', actual_commonname2)
-
-        # with conversion
-        actual_commonname2 = utils.commonname(b'/some/where/to/',
-                                              b'/some/where/to/go/to',
-                                              as_str=True)
-        self.assertEquals('go/to', actual_commonname)
