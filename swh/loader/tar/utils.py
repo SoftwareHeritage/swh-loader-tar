@@ -9,6 +9,7 @@ import re
 # FIXME; extract this in property
 # to recognize existing naming pattern
 extensions = [
+    'ps',
     'zip',
     'tar',
     'gz', 'tgz',
@@ -20,28 +21,51 @@ extensions = [
 ]
 
 
-re_extensions = re.compile(r'(\.(%s))+$' % '|'.join(extensions),
-                           flags=re.IGNORECASE)
-software_name_pattern = re.compile('([a-zA-Z-_]*[0-9]*[a-zA-Z-_]*)')
-digit_pattern = re.compile('[0-9]')
-release_pattern = re.compile('[0-9.]+')
+# Match a filename into components.
+#
+# We use Debian's release number heuristic: A release number starts
+# with a digit, and is followed by alphanumeric characters or any of
+# ., +, :, ~ and -
+#
+# We hardcode a list of possible extensions, as this release number
+# scheme would match them too... We match on any combination of those.
+#
+# Greedy matching is done right to left (we only match the extension
+# greedily with +, software_name and release_number are matched lazily
+# with +? and *?).
+
+pattern = re.compile(r'''
+^
+(?:
+    # We have a software name and a release number, separated with a
+    # -, _ or dot.
+    (?P<software_name1>.+?[-_.])
+    (?P<release_number>[0-9][0-9a-zA-Z.+:~-]*?)
+|
+    # We couldn't match a release number, put everything in the
+    # software name.
+    (?P<software_name2>.+?)
+)
+(?P<extension>(?:\.(?:%s))+)
+$
+''' % '|'.join(extensions),
+     flags=re.VERBOSE)
 
 
 def _extension(filename):
-    m = re_extensions.search(filename)
+    m = pattern.match(filename)
     if m:
-        return m.group()
+        return m.groupdict()['extension']
 
 
 def _software_name(filename):
     """Compute the software name from the filename.
 
     """
-    m = software_name_pattern.match(filename)
-    res = m.group()
-    if res and digit_pattern.match(res[-1]):  # remains first version number
-        return res[0:-1]
-    return res
+    m = pattern.match(filename)
+    if m:
+        d = m.groupdict()
+        return d['software_name1'] or d['software_name2']
 
 
 def release_number(filename):
@@ -51,20 +75,9 @@ def release_number(filename):
         filename: filename as string or bytes.
 
     """
-    name = _software_name(filename)
-    ext = _extension(filename)
-    if not ext:
-        return None
-    version = filename.replace(name, '').replace(ext, '')
-    if version:
-        # some filename use . for delimitation
-        # not caught by regexp so filtered here
-        if version[0] == '.':
-            version = version[1:]  # arf
-        if not release_pattern.match(version):  # check pattern release
-            return None
-        return version
-    return None
+    m = pattern.match(filename)
+    if m:
+        return m.groupdict().get('release_number')
 
 
 def commonname(path0, path1, as_str=False):

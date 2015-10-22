@@ -54,7 +54,7 @@ class TestUtils(unittest.TestCase):
                 'mit-scheme_', '7.7.90+20080130-0gutsy1', '.diff.gz'),
 
             # no release number
-            'gnu.ps.gz': ('gnu', None, '.gz'),
+            'gnu.ps.gz': ('gnu', None, '.ps.gz'),
             'direvent-latest.tar.gz': ('direvent-latest', None, '.tar.gz'),
         }
 
@@ -82,7 +82,7 @@ class TestUtils(unittest.TestCase):
             self.assertEquals(
                 actual_ext,
                 expected_ext,
-                'for %s, the version should be %s' % (f, expected_ext))
+                'for %s, the extension should be %s' % (f, expected_ext))
 
     @istest
     def software_name(self):
@@ -95,7 +95,7 @@ class TestUtils(unittest.TestCase):
             self.assertEquals(
                 actual_name,
                 expected_name,
-                'for %s, the version should be %s' % (f, expected_name))
+                'for %s, the name should be %s' % (f, expected_name))
 
     @istest
     def commonname(self):
