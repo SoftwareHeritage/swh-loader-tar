@@ -11,7 +11,39 @@ import shutil
 def is_tarball(filepath):
     """Given a filepath, determine if it represents an archive.
 
+    Args:
+        filepath: file to test for tarball property
+
+    Returns:
+        Bool, True if it's a tarball, False otherwise
+
     """
     return tarfile.is_tarfile(filepath) or zipfile.is_zipfile(filepath)
 
-uncompress = shutil.unpack_archive
+
+def _uncompress_zip(tarpath, dirpath):
+    """Uncompress zip adapter function.
+
+    """
+    with zipfile.ZipFile(tarpath) as z:
+        z.extractall(path=dirpath)
+
+
+def _uncompress_tar(tarpath, dirpath):
+    """Uncompress tar adapter function.
+
+    """
+    with tarfile.open(tarpath) as t:
+        t.extractall(path=dirpath)
+
+
+def uncompress(tarpath, dest):
+    """Uncompress tarpath to dest.
+
+    """
+    if tarfile.is_tarfile(tarpath):
+        _uncompress_tar(tarpath, dest)
+    elif zipfile.is_zipfile(tarpath):
+        _uncompress_zip(tarpath, dest)
+    else:  # tryout
+        shutil.unpack_archive(tarpath, dest)
