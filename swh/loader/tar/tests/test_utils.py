@@ -12,7 +12,7 @@ from swh.loader.tar import utils
 
 class TestUtils(unittest.TestCase):
     @istest
-    def compute_basic_release_number(self):
+    def release_number(self):
         files = {
             'free-ipmi-1.2.2.tar': '1.2.2',
             'free-ipmi-1.2.2.tar.gz': '1.2.2',
