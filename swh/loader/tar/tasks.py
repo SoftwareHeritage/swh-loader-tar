@@ -29,7 +29,6 @@ class LoadTarRepository(tasks.LoadDirRepository):
             - origin, revision, release, occurrences: see LoadDirRepository.run
 
         """
-
         extraction_dir = self.config['extraction_dir']
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                     dir=extraction_dir)
