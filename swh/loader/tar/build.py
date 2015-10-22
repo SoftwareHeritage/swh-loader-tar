@@ -93,6 +93,13 @@ def swh_occurrence(tarpath):
     return _build_occurrence(tarpath, SWH_AUTHORITY, validity_ts)
 
 
+def _time_from_path(tarpath):
+    """Compute the modification time from the tarpath.
+
+    """
+    return os.lstat(tarpath).st_mtime
+
+
 def gnu_occurrence(tarpath):
     """Compute the occurrence from the tarpath with gnu authority.
 
@@ -103,15 +110,8 @@ def gnu_occurrence(tarpath):
         Occurrence dictionary (cf. _build_occurrence)
 
     """
-    validity_ts = os.lstat(tarpath).st_mtime
+    validity_ts = _time_from_path(tarpath)
     return _build_occurrence(tarpath, GNU_AUTHORITY, validity_ts)
-
-
-def _time_from_path(tarpath):
-    """Compute the modification time from the tarpath.
-
-    """
-    return os.lstat(tarpath).st_mtime
 
 
 def compute_revision():
