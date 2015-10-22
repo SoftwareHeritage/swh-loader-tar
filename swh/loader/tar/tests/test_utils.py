@@ -63,6 +63,8 @@ class TestUtils(unittest.TestCase):
             'direvent-latest.tar.gz': ('direvent-latest', None, '.tar.gz'),
         }
 
+        cls.files_error = ['.tar', '.anything']
+
     @istest
     def parse_filename(self):
         for f in self.files:
@@ -78,6 +80,12 @@ class TestUtils(unittest.TestCase):
             }
 
             self.assertEquals(actual_components, expected_components)
+
+    @istest
+    def parse_filename_not_parseable_file(self):
+        for f in self.files_error:
+            with self.assertRaises(ValueError):
+                utils.parse_filename(f)
 
     @istest
     def release_number(self):
