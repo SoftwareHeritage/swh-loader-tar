@@ -46,5 +46,4 @@ class LoadTarRepository(tasks.LoadDirRepository):
                         release,
                         occurrences)
         finally:  # always clean up
-            # FIXME: some files not properly cleaned up due to permission error
             shutil.rmtree(dir_path)

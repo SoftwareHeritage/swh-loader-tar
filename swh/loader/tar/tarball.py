@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import os
 import tarfile
 import zipfile
 
@@ -50,3 +51,9 @@ def uncompress(tarpath, dest):
         _uncompress_zip(tarpath, dest)
     else:
         raise ValueError('File %s is not a supported archive.' % tarpath)
+
+    # Fix permissions
+    for dirpath, _, fnames in os.walk(dest):
+        os.chmod(dirpath, 0o755)
+        for fname in fnames:
+            os.chmod(os.path.join(dirpath, fname), 0o644)
