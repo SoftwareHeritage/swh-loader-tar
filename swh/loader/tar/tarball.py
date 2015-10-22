@@ -5,7 +5,6 @@
 
 import tarfile
 import zipfile
-import shutil
 
 
 def is_tarball(filepath):
@@ -45,5 +44,5 @@ def uncompress(tarpath, dest):
         _uncompress_tar(tarpath, dest)
     elif zipfile.is_zipfile(tarpath):
         _uncompress_zip(tarpath, dest)
-    else:  # tryout
-        shutil.unpack_archive(tarpath, dest)
+    else:
+        raise ValueError('File %s is not a supported archive.' % tarpath)
