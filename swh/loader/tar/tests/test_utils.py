@@ -38,6 +38,10 @@ class TestUtils(unittest.TestCase):
                 'aspell6-pt_BR-', '20070411-0', '.tar.bz2'),
             'libosip2-3.3.0.tar.gz': ('libosip2-', '3.3.0', '.tar.gz'),
 
+            # other cases
+            'hurd-F2-main.iso': ('hurd-F2-main', None, '.iso'),
+
+            # fail right now
             # particular patterns...
             'gift-0.1.9+3epsilon.tar.gz': (
                 'gift-', '0.1.9+3epsilon', '.tar.gz'),

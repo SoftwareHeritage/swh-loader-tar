@@ -17,7 +17,8 @@ extensions = [
     'lzma', 'lz',
     'xz',
     'Z',
-    'diff'
+    'diff',
+    'iso'
 ]
 
 
