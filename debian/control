@@ -17,4 +17,4 @@ Homepage: https://forge.softwareheritage.org/diffusion/DLDTAR/
 Package: python3-swh.loader.tar
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}
-Description: Software Heritage Loader Directory
+Description: Software Heritage Tarball Loader
