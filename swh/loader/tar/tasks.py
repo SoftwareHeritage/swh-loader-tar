@@ -7,7 +7,7 @@ import shutil
 import tempfile
 
 from swh.loader.dir import tasks
-from swh.loader.tar.tarball import Tarball
+from swh.loader.tar import tarball
 
 
 class LoadTarRepository(tasks.LoadDirRepository):
@@ -21,17 +21,14 @@ class LoadTarRepository(tasks.LoadDirRepository):
         'extraction_dir': ('str', '/tmp/swh.loader.tar/'),
     }
 
-    def run(self, tarball_dict, origin, revision, release, occurrences):
+    def run(self, tarpath, origin, revision, release, occurrences):
         """Import a tarball into swh.
 
         Args:
-            - tarball: a tarball object as dictionary.
+            - tarpath: path to a tarball file
             - origin, revision, release, occurrences: see LoadDirRepository.run
 
         """
-        archive = Tarball(tarball_dict['nature'],
-                          tarball_dict['name'],
-                          tarball_dict['path'])
 
         extraction_dir = self.config['extraction_dir']
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
@@ -41,10 +38,14 @@ class LoadTarRepository(tasks.LoadDirRepository):
             origin['type'] = 'tar'
 
         try:
-            self.log.info('Uncompress %s to %s' % (archive.path, dir_path))
-            archive.extract(dir_path)
+            self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
+            tarball.uncompress(tarpath, dir_path)
 
-            super().run(dir_path, origin, revision, release, occurrences)
+            super().run(dir_path,
+                        origin,
+                        revision,
+                        release,
+                        occurrences)
         finally:  # always clean up
             # FIXME: some files not properly cleaned up due to permission error
             shutil.rmtree(dir_path)

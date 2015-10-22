@@ -25,14 +25,11 @@ def list_archives_from(path):
             if not os.path.exists(tarpath):
                 continue
 
-            tarball_nature = tarball.nature(tarpath)
-            if not tarball_nature:
-                continue
-
-            yield tarball.Tarball(tarball_nature, fname, tarpath)
+            if tarball.is_tarball(tarpath):
+                yield tarpath, fname
 
 
-def compute_message_from(conf, root_dir, tarball):
+def compute_message_from(conf, root_dir, tarpath, filename):
     """Post the message to workers.
 
     Args:
@@ -44,8 +41,6 @@ def compute_message_from(conf, root_dir, tarball):
         None
 
     """
-    tarpath = tarball.path
-    filename = tarball.name
     origin = build.compute_origin(conf['url_scheme'],
                                   conf['type'],
                                   root_dir,
@@ -56,7 +51,7 @@ def compute_message_from(conf, root_dir, tarball):
     release = build.compute_release(filename, tarpath)
 
     task = tasks.LoadTarRepository()
-    task.apply_async((tarball.to_dict(),
+    task.apply_async((tarpath,
                       origin,
                       revision,
                       release,
@@ -77,9 +72,9 @@ def produce_archive_messages_from(conf, path):
     LIMIT = conf['limit']
     count = 0
 
-    for archive in list_archives_from(path):
+    for tarpath, fname in list_archives_from(path):
         count += 1
-        compute_message_from(conf, path, archive)
+        compute_message_from(conf, path, tarpath, fname)
         if LIMIT and count >= LIMIT:
             return count
 
