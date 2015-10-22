@@ -84,8 +84,12 @@ def _software_name(filename):
     return res
 
 
-def commonname(path0, path1):
+def commonname(path0, path1, as_str=False):
     """Compute the commonname between the path0 and path1.
 
     """
-    return path1.split(path0)[1]
+    res = path1.split(path0)[1]
+
+    if as_str and isinstance(res, bytes):
+        return res.decode('utf-8')
+    return res

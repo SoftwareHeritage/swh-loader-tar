@@ -128,3 +128,9 @@ class TestUtils(unittest.TestCase):
                                               b'/some/where/to/go/to')
         # then
         self.assertEquals(b'go/to', actual_commonname2)
+
+        # with conversion
+        actual_commonname2 = utils.commonname(b'/some/where/to/',
+                                              b'/some/where/to/go/to',
+                                              as_str=True)
+        self.assertEquals('go/to', actual_commonname)

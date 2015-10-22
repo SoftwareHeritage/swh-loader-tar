@@ -32,13 +32,13 @@ def list_archives_from(path):
             yield tarball.Tarball(tarball_nature, fname, tarpath)
 
 
-def compute_message_from(conf, tarball):
+def compute_message_from(conf, root_dir, tarball):
     """Post the message to workers.
 
     Args:
         conf: dictionary holding static metadata
-        dirpath: directory containing the filename
-        filename: filename without any path
+        root_dir: root directory
+        tarball: the archive's representation
 
     Returns:
         None
@@ -46,11 +46,9 @@ def compute_message_from(conf, tarball):
     """
     tarpath = tarball.path
     filename = tarball.name
-    root_dirpath = conf['mirror_root_directory']
-
     origin = build.compute_origin(conf['url_scheme'],
                                   conf['type'],
-                                  root_dirpath,
+                                  root_dir,
                                   tarpath)
     revision = build.compute_revision()
     occurrences = [build.gnu_occurrence(tarpath),
@@ -65,21 +63,23 @@ def compute_message_from(conf, tarball):
                       occurrences))
 
 
-def produce_archive_messages(conf, path):
+def produce_archive_messages_from(conf, path):
     """From path, produce archive tarball message to celery.
 
     Args:
+        conf: dictionary holding static metadata
         path: top directory to list archives from.
 
     Returns:
         None
+
     """
     LIMIT = conf['limit']
     count = 0
 
     for archive in list_archives_from(path):
         count += 1
-        compute_message_from(conf, archive)
+        compute_message_from(conf, path, archive)
         if LIMIT and count >= LIMIT:
             return count
 
@@ -116,6 +116,6 @@ if __name__ == '__main__':
 
     conf = load_config(conf_file)
 
-    nb_tarballs = produce_archive_messages(conf, conf['mirror_root_directory'])
+    root_dir = conf['mirror_root_directory'].encode('utf-8')
 
-    print('%s tasks sent!' % nb_tarballs)
+    nb_tarballs = produce_archive_messages_from(conf, root_dir)
