@@ -5,8 +5,8 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import sys
 import os
+import sys
 
 from swh.core import config
 from swh.loader.tar import tasks, tarball, build
