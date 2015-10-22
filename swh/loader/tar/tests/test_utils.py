@@ -59,43 +59,33 @@ class TestUtils(unittest.TestCase):
         }
 
     @istest
-    def release_number(self):
+    def parse_filename(self):
         for f in self.files:
             # when
-            actual_rel_num = utils.release_number(f)
+            actual_components = utils.parse_filename(f)
+
+            # then
+            name, version, ext = self.files[f]
+            expected_components = {
+                'software_name': name,
+                'release_number': version,
+                'extension': ext,
+            }
+
+            self.assertEquals(actual_components, expected_components)
+
+    @istest
+    def release_number(self):
+        for f in self.files.keys():
+            # when
+            actual_ext = utils.release_number(f)
 
             # then
             _, expected_rel_num, _ = self.files[f]
             self.assertEquals(
-                actual_rel_num,
+                actual_ext,
                 expected_rel_num,
                 'for %s, the version should be %s' % (f, expected_rel_num))
-
-    @istest
-    def extension(self):
-        for f in self.files.keys():
-            # when
-            actual_ext = utils._extension(f)
-
-            # then
-            _, _, expected_ext = self.files[f]
-            self.assertEquals(
-                actual_ext,
-                expected_ext,
-                'for %s, the extension should be %s' % (f, expected_ext))
-
-    @istest
-    def software_name(self):
-        for f in self.files.keys():
-            # when
-            actual_name = utils._software_name(f)
-
-            # then
-            expected_name, _, _ = self.files[f]
-            self.assertEquals(
-                actual_name,
-                expected_name,
-                'for %s, the name should be %s' % (f, expected_name))
 
     @istest
     def commonname(self):

@@ -21,19 +21,6 @@ extensions = [
 ]
 
 
-# Match a filename into components.
-#
-# We use Debian's release number heuristic: A release number starts
-# with a digit, and is followed by alphanumeric characters or any of
-# ., +, :, ~ and -
-#
-# We hardcode a list of possible extensions, as this release number
-# scheme would match them too... We match on any combination of those.
-#
-# Greedy matching is done right to left (we only match the extension
-# greedily with +, software_name and release_number are matched lazily
-# with +? and *?).
-
 pattern = re.compile(r'''
 ^
 (?:
@@ -52,32 +39,53 @@ $
      flags=re.VERBOSE)
 
 
-def _extension(filename):
+def parse_filename(filename):
+    """Parse a filename into its components.
+
+    Parsing policy:
+    We use Debian's release number heuristic: A release number starts
+    with a digit, and is followed by alphanumeric characters or any of
+    ., +, :, ~ and -
+
+    We hardcode a list of possible extensions, as this release number
+    scheme would match them too... We match on any combination of those.
+
+    Greedy matching is done right to left (we only match the extension
+    greedily with +, software_name and release_number are matched lazily
+    with +? and *?).
+
+    Args:
+        filename: filename without path.
+
+    Returns:
+        Dictionary with the following keys:
+        - software_name
+        - release_number: can be None if it could not be found.
+        - extension
+
+    Raises:
+        ValueError if the filename could not be parsed.
+
+"""
     m = pattern.match(filename)
-    if m:
-        return m.groupdict()['extension']
+    if not m:
+        raise ValueError('Filename %s could not be parsed.' % filename)
 
-
-def _software_name(filename):
-    """Compute the software name from the filename.
-
-    """
-    m = pattern.match(filename)
-    if m:
-        d = m.groupdict()
-        return d['software_name1'] or d['software_name2']
+    d = m.groupdict()
+    return {
+        'software_name': d['software_name1'] or d['software_name2'],
+        'release_number': d['release_number'],
+        'extension': d['extension'],
+    }
 
 
 def release_number(filename):
     """Compute the release number from the filename.
 
-    Args:
-        filename: filename as string or bytes.
+    cf. parse_filename's docstring
 
     """
-    m = pattern.match(filename)
-    if m:
-        return m.groupdict().get('release_number')
+    return parse_filename(filename)['release_number']
 
 
 def commonname(path0, path1, as_str=False):
