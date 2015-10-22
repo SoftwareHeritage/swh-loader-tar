@@ -76,3 +76,10 @@ def _software_name(filename):
     if res and digit_pattern.match(res[-1]):  # remains first version number
         return res[0:-1]
     return res
+
+
+def commonname(path0, path1):
+    """Compute the commonname between the path0 and path1.
+
+    """
+    return path1.split(path0)[1]

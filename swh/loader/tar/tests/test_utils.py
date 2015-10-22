@@ -59,3 +59,17 @@ class TestUtils(unittest.TestCase):
                 files[f],
                 rel_num,
                 'for %s, the version should be %s' % (f, files[f]))
+
+    @istest
+    def commonname(self):
+        # when
+        actual_commonname = utils.commonname('/some/where/to/',
+                                             '/some/where/to/go/to')
+        # then
+        self.assertEquals('go/to', actual_commonname)
+
+        # when
+        actual_commonname2 = utils.commonname(b'/some/where/to/',
+                                              b'/some/where/to/go/to')
+        # then
+        self.assertEquals(b'go/to', actual_commonname2)
