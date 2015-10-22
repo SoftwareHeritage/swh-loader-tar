@@ -41,7 +41,8 @@ class TestUtils(unittest.TestCase):
             # other cases
             'hurd-F2-main.iso': ('hurd-F2-main', None, '.iso'),
 
-            # fail right now
+            'winboard-4_0_5.exe': ('winboard-', '4_0_5', '.exe'),
+
             # particular patterns...
             'gift-0.1.9+3epsilon.tar.gz': (
                 'gift-', '0.1.9+3epsilon', '.tar.gz'),

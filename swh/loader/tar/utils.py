@@ -18,7 +18,8 @@ extensions = [
     'xz',
     'Z',
     'diff',
-    'iso'
+    'iso',
+    'exe'
 ]
 
 
@@ -28,7 +29,7 @@ pattern = re.compile(r'''
     # We have a software name and a release number, separated with a
     # -, _ or dot.
     (?P<software_name1>.+?[-_.])
-    (?P<release_number>[0-9][0-9a-zA-Z.+:~-]*?)
+    (?P<release_number>[0-9][0-9a-zA-Z_.+:~-]*?)
 |
     # We couldn't match a release number, put everything in the
     # software name.
