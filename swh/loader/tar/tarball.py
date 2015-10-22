@@ -56,4 +56,6 @@ def uncompress(tarpath, dest):
     for dirpath, _, fnames in os.walk(dest):
         os.chmod(dirpath, 0o755)
         for fname in fnames:
-            os.chmod(os.path.join(dirpath, fname), 0o644)
+            fpath = os.path.join(dirpath, fname)
+            if not os.path.islink(fpath):
+                os.chmod(fpath, 0o644)
