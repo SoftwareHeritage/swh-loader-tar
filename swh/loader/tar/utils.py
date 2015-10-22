@@ -4,25 +4,11 @@
 # See top-level LICENSE file for more information
 
 import re
-import itertools
-
-
-def init_archive_extension_pattern(exts):
-    """Given a list of extensions, return the regexp for exts.
-
-    """
-    res = []
-    for p, pp in itertools.product(exts, repeat=2):
-        res.append('\.' + '\.'.join([p, pp]))
-    for p in exts:
-        res.append(''.join(['\.' + p]))
-
-    return '|'.join(res)
 
 
 # FIXME; extract this in property
 # to recognize existing naming pattern
-archive_extension_patterns = [
+extensions = [
     'zip',
     'tar',
     'gz', 'tgz',
@@ -30,19 +16,19 @@ archive_extension_patterns = [
     'lzma', 'lz',
     'xz',
     'Z',
+    'diff'
 ]
 
 
-re_archive_patterns = re.compile(
-    init_archive_extension_pattern(archive_extension_patterns),
-    flags=re.IGNORECASE)
+re_extensions = re.compile(r'(\.(%s))+$' % '|'.join(extensions),
+                           flags=re.IGNORECASE)
 software_name_pattern = re.compile('([a-zA-Z-_]*[0-9]*[a-zA-Z-_]*)')
 digit_pattern = re.compile('[0-9]')
 release_pattern = re.compile('[0-9.]+')
 
 
 def _extension(filename):
-    m = re_archive_patterns.search(filename)
+    m = re_extensions.search(filename)
     if m:
         return m.group()
 
