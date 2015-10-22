@@ -111,6 +111,6 @@ if __name__ == '__main__':
 
     conf = load_config(conf_file)
 
-    root_dir = conf['mirror_root_directory'].encode('utf-8')
+    root_dir = conf['mirror_root_directory']
 
     nb_tarballs = produce_archive_messages_from(conf, root_dir)
