@@ -74,7 +74,11 @@ def produce_archive_messages_from(conf, path):
 
     for tarpath, fname in list_archives_from(path):
         count += 1
-        compute_message_from(conf, path, tarpath, fname)
+        try:
+            compute_message_from(conf, path, tarpath, fname)
+        except ValueError:
+            print('Problem with the following archive: %s' % tarpath)
+
         if LIMIT and count >= LIMIT:
             return count
 
