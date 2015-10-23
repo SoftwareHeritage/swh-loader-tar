@@ -29,6 +29,7 @@ class TestUtils(unittest.TestCase):
                 'gmp-', '4.1.1-4.1.2', '.diff.tar.Z'),
             'findutils-4.2.18.tar.bzip2': (
                 'findutils-', '4.2.18', '.tar.bzip2'),
+            'gnunet-java-0.9.4.jar': ('gnunet-java-', '0.9.4', '.jar'),
 
             # . separator
             'greg-1.4.tar.gz': ('greg-', '1.4', '.tar.gz'),

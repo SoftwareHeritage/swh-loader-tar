@@ -19,7 +19,8 @@ extensions = [
     'Z',
     'diff',
     'iso',
-    'exe'
+    'exe',
+    'jar'
 ]
 
 
