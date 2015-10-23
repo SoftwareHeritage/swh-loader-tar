@@ -25,6 +25,7 @@ extensions = [
     'gem',
     'xpi',
     'apk',
+    'dmg',
 ]
 
 

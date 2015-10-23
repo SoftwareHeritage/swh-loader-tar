@@ -36,9 +36,10 @@ class TestUtils(unittest.TestCase):
             'librejs-6.0.5.xpi': ('librejs-', '6.0.5', '.xpi'),
             'icecat-31.8.0.csb.langpack.xpi': (
                 'icecat-', '31.8.0.csb.langpack', '.xpi'),
-
             'icecatmobile-31.8.0.en-US.android-arm.apk': (
                 'icecatmobile-', '31.8.0.en-US.android-arm', '.apk'),
+            'icecat-31.8.0.en-US.mac.dmg': (
+                'icecat-', '31.8.0.en-US.mac', '.dmg'),
 
             # . separator
             'greg-1.4.tar.gz': ('greg-', '1.4', '.tar.gz'),
