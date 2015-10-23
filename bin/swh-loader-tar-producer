@@ -13,11 +13,15 @@ from swh.core import config
 from swh.loader.tar import tasks, tarball, build
 
 
-def list_archives_from(path):
-    """From path, produce archive tarball message to celery.
+def list_archives_from_dir(path):
+    """Given a path to a directory, walk such directory and yield tuple of
+    tarpath, fname.
 
     Args:
-        path: top directory to list archives from.
+        path: top level directory
+
+    Returns:
+        Generator of tuple tarpath, filename with tarpath a tarball.
 
     """
     for dirpath, dirnames, filenames in os.walk(path):
@@ -28,6 +32,44 @@ def list_archives_from(path):
 
             if tarball.is_tarball(tarpath):
                 yield tarpath, fname
+
+
+def list_archives_from_file(mirror_file):
+    """Given a path to a file containing one tarball per line, yield a tuple of
+    tarpath, fname.
+
+    Args:
+        mirror_file: path to the file containing list of tarpath.
+
+    Returns:
+        Generator of tuple tarpath, filename with tarpath a tarball.
+
+    """
+    with open(mirror_file, 'r') as f:
+        for tarpath in f.readlines():
+            tarpath = tarpath.strip()
+            if not os.path.exists(tarpath):
+                print('WARN: %s does not exist. Skipped.' % tarpath)
+                continue
+
+            if tarball.is_tarball(tarpath):
+                yield tarpath, os.path.basename(tarpath)
+
+
+def list_archives_from(path):
+    """From path, list tuple of tarpath, fname.
+
+    Args:
+        path: top directory to list archives from or custom file format.
+
+    """
+    if os.path.isfile(path):
+        yield from list_archives_from_file(path)
+    elif os.path.isdir(path):
+        yield from list_archives_from_dir(path)
+    else:
+        raise ValueError(
+            'Input incorrect, %s must be a file or a directory.' % path)
 
 
 def compute_message_from(conf, root_dir, tarpath, filename, dry_run=False):
@@ -64,7 +106,7 @@ def compute_message_from(conf, root_dir, tarpath, filename, dry_run=False):
                           occurrences))
 
 
-def produce_archive_messages_from(conf, path, dry_run=False):
+def produce_archive_messages_from(conf, path, mirror_file=None, dry_run=False):
     """From path, produce archive tarball messages to celery.
 
     Will print error message when some computation arise on archive
@@ -73,6 +115,7 @@ def produce_archive_messages_from(conf, path, dry_run=False):
     Args:
         conf: dictionary holding static metadata
         path: top directory to list archives from.
+        mirror_file: a filtering file of tarballs to load
         dry_run: will compute but not send messages
 
     Returns:
@@ -85,7 +128,8 @@ def produce_archive_messages_from(conf, path, dry_run=False):
     LIMIT = conf['limit']
     count = 0
 
-    for tarpath, fname in list_archives_from(path):
+    path_source_tarballs = mirror_file if mirror_file else path
+    for tarpath, fname in list_archives_from(path_source_tarballs):
         count += 1
         try:
             compute_message_from(conf, path, tarpath, fname, dry_run)
@@ -166,6 +210,10 @@ if __name__ == '__main__':
 
     conf = load_config(config_file)
 
-    nb_tarballs = produce_archive_messages_from(conf,
-                                                conf['mirror_root_directory'],
-                                                args.dry_run)
+    nb_tarballs = produce_archive_messages_from(
+        conf,
+        conf['mirror_root_directory'],
+        conf.get('mirror_subset_archives'),
+        args.dry_run)
+
+    print('%s tarballs send to worker.' % nb_tarballs)
