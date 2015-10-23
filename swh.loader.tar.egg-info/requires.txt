@@ -1,0 +1,5 @@
+retrying
+swh.core
+swh.loader.dir
+swh.storage
+vcversioner

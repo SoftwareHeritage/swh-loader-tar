@@ -1,8 +1,17 @@
-swh-loader-tar (0.0.1-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.2-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.2
+  * Producer:
+  * Improve release number extraction
+  * Improve producer's cli option
+  * Add option to load tarball subsets from a file
+  * Add tarball format (dmg, apk, xpi, jar, etc...)
+  * Add coverage
+  * Loader:
+  * Fix permission error when cleaning up
+  * Improve uncompress policy
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 21 Oct 2015 12:35:53 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 23 Oct 2015 11:46:20 +0200
 
 swh-loader-tar (0.0.1-1~swh1) unstable-swh; urgency=medium
 
