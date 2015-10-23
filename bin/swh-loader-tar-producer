@@ -5,146 +5,23 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import sys
+import argparse
 import os
-import datetime
+import sys
 
 from swh.core import config
-from swh.loader.tar import utils, tasks, tarball
+from swh.loader.tar import tasks, tarball, build
 
 
-# Static setup
-EPOCH = 0
-UTC_OFFSET = '+0000'
-SWH_PERSON = 'Software Heritage'
-SWH_MAIL = 'robot@swh.org'
-REVISION_MESSAGE = 'synthetic message'
-REVISION_TYPE = 'tar'
-REVISION = {
-    'author_date': EPOCH,
-    'author_offset': UTC_OFFSET,
-    'author_name': SWH_PERSON,
-    'author_email': SWH_MAIL,
-    'committer_date': EPOCH,
-    'committer_offset': UTC_OFFSET,
-    'committer_name': SWH_PERSON,
-    'committer_email': SWH_MAIL,
-    'type': REVISION_TYPE,
-    'message': REVISION_MESSAGE,
-}
-SWH_AUTHORITY = 1
-GNU_AUTHORITY = 2
-
-
-def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
-    """Compute the origin.
+def list_archives_from_dir(path):
+    """Given a path to a directory, walk such directory and yield tuple of
+    tarpath, fname.
 
     Args:
-        - config: configuration dict with url_scheme and type keys.
-        - tarpath: file's path
+        path: top level directory
 
     Returns:
-        Dictionary origin with keys:
-       - url: origin's url
-       - type: origin's type
-
-    """
-    relative_path = tarpath.split(root_dirpath)[1]
-    return {
-        'url': ''.join([url_scheme, os.path.dirname(relative_path)]),
-        'type': url_type,
-    }
-
-
-def _build_occurrence(tarpath, authority_id, validity_ts):
-    """Build an occurrence from branch_name, authority_id and validity_ts.
-
-    Args:
-        - tarpath: file's path
-        - authority_id: swh authority id (as per swh's storage values in
-        organization table)
-        - validity_ts: validity timestamp
-
-    Returns:
-        Occurrence dictionary
-        - tarpath: file's path
-        - authority: swh authority
-        - validity: validity date (e.g. 2015-01-01 00:00:00+00)
-    """
-    validity = '%s+00' % datetime.datetime.utcfromtimestamp(validity_ts)
-    return {
-        'branch': os.path.basename(tarpath),
-        'authority': authority_id,
-        'validity': validity
-    }
-
-
-def swh_occurrence(tarpath):
-    """Compute the occurrence from the tarpath with swh authority.
-
-    Args:
-        tarpath: file's path
-
-    Returns:
-        Occurrence dictionary (cf. _build_occurrence)
-
-    """
-    validity_ts = os.lstat(tarpath).st_atime
-    return _build_occurrence(tarpath, SWH_AUTHORITY, validity_ts)
-
-
-def gnu_occurrence(tarpath):
-    """Compute the occurrence from the tarpath with gnu authority.
-
-    Args:
-        tarpath: file's path
-
-    Return:
-        Occurrence dictionary (cf. _build_occurrence)
-
-    """
-    validity_ts = os.lstat(tarpath).st_mtime
-    return _build_occurrence(tarpath, GNU_AUTHORITY, validity_ts)
-
-
-def compute_release(filename, tarpath):
-    """Compute a release from a given tarpath, filename.
-    If the tarpath does not contain a recognizable release number, the release
-    can be skipped.
-
-    Args:
-        filename: file's name without path
-        tarpath: file's absolute path
-
-    Returns:
-        None if the release number cannot be extracted from the filename.
-        Otherwise a synthetic release is computed with the following keys:
-            - name: the release computed from the filename
-            - date: the modification timestamp as returned by a fstat call
-            - offset: +0000
-            - author_name: ''
-            - author_email: ''
-            - comment: ''
-
-    """
-    release_number = utils.release_number(filename)
-    if release_number:
-        return {
-            'name': release_number,
-            'date': os.lstat(tarpath).st_mtime,
-            'offset': UTC_OFFSET,
-            'author_name': '',
-            'author_email': '',
-            'comment': '',
-        }
-    return None
-
-
-def list_archives_from(path):
-    """From path, produce archive tarball message to celery.
-
-    Args:
-        path: top directory to list archives from.
+        Generator of tuple tarpath, filename with tarpath a tarball.
 
     """
     for dirpath, dirnames, filenames in os.walk(path):
@@ -153,59 +30,112 @@ def list_archives_from(path):
             if not os.path.exists(tarpath):
                 continue
 
-            tarball_nature = tarball.nature(tarpath)
-            if not tarball_nature:
+            if tarball.is_tarball(tarpath):
+                yield tarpath, fname
+
+
+def list_archives_from_file(mirror_file):
+    """Given a path to a file containing one tarball per line, yield a tuple of
+    tarpath, fname.
+
+    Args:
+        mirror_file: path to the file containing list of tarpath.
+
+    Returns:
+        Generator of tuple tarpath, filename with tarpath a tarball.
+
+    """
+    with open(mirror_file, 'r') as f:
+        for tarpath in f.readlines():
+            tarpath = tarpath.strip()
+            if not os.path.exists(tarpath):
+                print('WARN: %s does not exist. Skipped.' % tarpath)
                 continue
 
-            yield tarball.Tarball(tarball_nature, fname, tarpath)
+            if tarball.is_tarball(tarpath):
+                yield tarpath, os.path.basename(tarpath)
 
 
-def compute_message_from(conf, tarball):
-    """Post the message to workers.
+def list_archives_from(path):
+    """From path, list tuple of tarpath, fname.
+
+    Args:
+        path: top directory to list archives from or custom file format.
+
+    """
+    if os.path.isfile(path):
+        yield from list_archives_from_file(path)
+    elif os.path.isdir(path):
+        yield from list_archives_from_dir(path)
+    else:
+        raise ValueError(
+            'Input incorrect, %s must be a file or a directory.' % path)
+
+
+def compute_message_from(conf, root_dir, tarpath, filename, dry_run=False):
+    """Compute and post the message to worker for the archive tarpath.
 
     Args:
         conf: dictionary holding static metadata
-        dirpath: directory containing the filename
-        filename: filename without any path
+        root_dir: root directory
+        tarball: the archive's representation
+        dry_run: will compute but not send messages
 
     Returns:
         None
+
+    Raises:
+        ValueError when release number computation error arise.
 
     """
-    tarpath = tarball.path
-    filename = tarball.name
-    root_dirpath = conf['mirror_root_directory']
+    origin = build.compute_origin(conf['url_scheme'],
+                                  conf['type'],
+                                  root_dir,
+                                  tarpath)
+    revision = build.compute_revision()
+    occurrences = [build.gnu_occurrence(tarpath),
+                   build.swh_occurrence(tarpath)]
+    release = build.compute_release(filename, tarpath)
 
-    origin = compute_origin(conf['url_scheme'],
-                            conf['type'],
-                            root_dirpath,
-                            tarpath)
-    occurrences = [gnu_occurrence(tarpath), swh_occurrence(tarpath)]
-    release = compute_release(filename, tarpath)
-
-    task = tasks.LoadTarRepository()
-    task.apply_async((tarball.to_dict(),
-                      origin,
-                      REVISION,
-                      release,
-                      occurrences))
+    if not dry_run:
+        task = tasks.LoadTarRepository()
+        task.apply_async((tarpath,
+                          origin,
+                          revision,
+                          release,
+                          occurrences))
 
 
-def produce_archive_messages(conf, path):
-    """From path, produce archive tarball message to celery.
+def produce_archive_messages_from(conf, path, mirror_file=None, dry_run=False):
+    """From path, produce archive tarball messages to celery.
+
+    Will print error message when some computation arise on archive
+    and continue.
 
     Args:
+        conf: dictionary holding static metadata
         path: top directory to list archives from.
+        mirror_file: a filtering file of tarballs to load
+        dry_run: will compute but not send messages
 
     Returns:
         None
+
+    Raises:
+        None
+
     """
     LIMIT = conf['limit']
     count = 0
 
-    for archive in list_archives_from(path):
+    path_source_tarballs = mirror_file if mirror_file else path
+    for tarpath, fname in list_archives_from(path_source_tarballs):
         count += 1
-        compute_message_from(conf, archive)
+        try:
+            compute_message_from(conf, path, tarpath, fname, dry_run)
+        except ValueError:
+            print('Problem with the following archive: %s' % tarpath)
+
         if LIMIT and count >= LIMIT:
             return count
 
@@ -214,6 +144,26 @@ def produce_archive_messages(conf, path):
 
 def load_config(conf_file):
     """Load the configuration from file.
+
+    Args:
+        conf_file: path to a configuration file with the following content:
+        [main]
+
+        # mirror's root directory holding tarballs to load into swh
+        mirror_root_directory = /home/storage/space/mirrors/gnu.org/gnu/
+
+        # origin setup's possible scheme url
+        url_scheme = rsync://ftp.gnu.org/gnu/
+
+        # origin type used for those tarballs
+        type = ftp
+
+        # For tryouts purposes (no limit if not specified)
+        limit = 1
+
+    Returns:
+        dictionary of data present in the configuration file.
+
 
     """
     conf = config.read(conf_file,
@@ -235,13 +185,35 @@ def load_config(conf_file):
     return conf
 
 
+def parse_args():
+    """Parse the configuration from the cli.
+
+    """
+    cli = argparse.ArgumentParser(
+        description='Tarball producer of local fs tarballs.')
+    cli.add_argument('--dry-run', '-n',
+                     action='store_true',
+                     help='Dry run (print repo only)')
+    cli.add_argument('--config', '-c', help='configuration file path')
+
+    args = cli.parse_args()
+
+    return args
+
+
 if __name__ == '__main__':
-    conf_file = sys.argv[1]
-    if not os.path.exists(conf_file):
-        conf_file = '../resources/producer/tar.ini'
+    args = parse_args()
+    config_file = args.config
+    if not config_file:
+        print('Missing configuration file option.')
+        sys.exit(1)
 
-    conf = load_config(conf_file)
+    conf = load_config(config_file)
 
-    nb_tarballs = produce_archive_messages(conf, conf['mirror_root_directory'])
+    nb_tarballs = produce_archive_messages_from(
+        conf,
+        conf['mirror_root_directory'],
+        conf.get('mirror_subset_archives'),
+        args.dry_run)
 
-    print('%s tasks sent!' % nb_tarballs)
+    print('%s tarballs send to worker.' % nb_tarballs)
