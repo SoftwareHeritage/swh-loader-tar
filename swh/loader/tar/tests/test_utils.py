@@ -33,6 +33,9 @@ class TestUtils(unittest.TestCase):
             'pycdio-0.15-py2.5-linux-i686.egg': (
                 'pycdio-', '0.15-py2.5-linux-i686', '.egg'),
             'rbcdio-0.04.gem': ('rbcdio-', '0.04', '.gem'),
+            'librejs-6.0.5.xpi': ('librejs-', '6.0.5', '.xpi'),
+            'icecat-31.8.0.csb.langpack.xpi': (
+                'icecat-', '31.8.0.csb.langpack', '.xpi'),
 
             # . separator
             'greg-1.4.tar.gz': ('greg-', '1.4', '.tar.gz'),

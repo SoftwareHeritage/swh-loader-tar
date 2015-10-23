@@ -22,7 +22,8 @@ extensions = [
     'exe',
     'jar',
     'egg',
-    'gem'
+    'gem',
+    'xpi',
 ]
 
 
