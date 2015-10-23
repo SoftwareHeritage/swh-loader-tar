@@ -5,6 +5,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import argparse
 import os
 import sys
 
@@ -29,16 +30,20 @@ def list_archives_from(path):
                 yield tarpath, fname
 
 
-def compute_message_from(conf, root_dir, tarpath, filename):
-    """Post the message to workers.
+def compute_message_from(conf, root_dir, tarpath, filename, dry_run=False):
+    """Compute and post the message to worker for the archive tarpath.
 
     Args:
         conf: dictionary holding static metadata
         root_dir: root directory
         tarball: the archive's representation
+        dry_run: will compute but not send messages
 
     Returns:
         None
+
+    Raises:
+        ValueError when release number computation error arise.
 
     """
     origin = build.compute_origin(conf['url_scheme'],
@@ -50,22 +55,30 @@ def compute_message_from(conf, root_dir, tarpath, filename):
                    build.swh_occurrence(tarpath)]
     release = build.compute_release(filename, tarpath)
 
-    task = tasks.LoadTarRepository()
-    task.apply_async((tarpath,
-                      origin,
-                      revision,
-                      release,
-                      occurrences))
+    if not dry_run:
+        task = tasks.LoadTarRepository()
+        task.apply_async((tarpath,
+                          origin,
+                          revision,
+                          release,
+                          occurrences))
 
 
-def produce_archive_messages_from(conf, path):
-    """From path, produce archive tarball message to celery.
+def produce_archive_messages_from(conf, path, dry_run=False):
+    """From path, produce archive tarball messages to celery.
+
+    Will print error message when some computation arise on archive
+    and continue.
 
     Args:
         conf: dictionary holding static metadata
         path: top directory to list archives from.
+        dry_run: will compute but not send messages
 
     Returns:
+        None
+
+    Raises:
         None
 
     """
@@ -75,7 +88,7 @@ def produce_archive_messages_from(conf, path):
     for tarpath, fname in list_archives_from(path):
         count += 1
         try:
-            compute_message_from(conf, path, tarpath, fname)
+            compute_message_from(conf, path, tarpath, fname, dry_run)
         except ValueError:
             print('Problem with the following archive: %s' % tarpath)
 
@@ -87,6 +100,26 @@ def produce_archive_messages_from(conf, path):
 
 def load_config(conf_file):
     """Load the configuration from file.
+
+    Args:
+        conf_file: path to a configuration file with the following content:
+        [main]
+
+        # mirror's root directory holding tarballs to load into swh
+        mirror_root_directory = /home/storage/space/mirrors/gnu.org/gnu/
+
+        # origin setup's possible scheme url
+        url_scheme = rsync://ftp.gnu.org/gnu/
+
+        # origin type used for those tarballs
+        type = ftp
+
+        # For tryouts purposes (no limit if not specified)
+        limit = 1
+
+    Returns:
+        dictionary of data present in the configuration file.
+
 
     """
     conf = config.read(conf_file,
@@ -108,13 +141,31 @@ def load_config(conf_file):
     return conf
 
 
+def parse_args():
+    """Parse the configuration from the cli.
+
+    """
+    cli = argparse.ArgumentParser(
+        description='Tarball producer of local fs tarballs.')
+    cli.add_argument('--dry-run', '-n',
+                     action='store_true',
+                     help='Dry run (print repo only)')
+    cli.add_argument('--config', '-c', help='configuration file path')
+
+    args = cli.parse_args()
+
+    return args
+
+
 if __name__ == '__main__':
-    conf_file = sys.argv[1]
-    if not os.path.exists(conf_file):
-        conf_file = '../resources/producer/tar.ini'
+    args = parse_args()
+    config_file = args.config
+    if not config_file:
+        print('Missing configuration file option.')
+        sys.exit(1)
 
-    conf = load_config(conf_file)
+    conf = load_config(config_file)
 
-    root_dir = conf['mirror_root_directory']
-
-    nb_tarballs = produce_archive_messages_from(conf, root_dir)
+    nb_tarballs = produce_archive_messages_from(conf,
+                                                conf['mirror_root_directory'],
+                                                args.dry_run)
