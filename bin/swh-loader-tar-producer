@@ -208,6 +208,9 @@ if __name__ == '__main__':
         print('Missing configuration file option.')
         sys.exit(1)
 
+    # instantiate celery app with its configuration
+    from swh.core.worker import app  # noqa
+
     conf = load_config(config_file)
 
     nb_tarballs = produce_archive_messages_from(
