@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import os
 import shutil
 import tempfile
 
@@ -30,6 +31,9 @@ class LoadTarRepository(tasks.LoadDirRepository):
 
         """
         extraction_dir = self.config['extraction_dir']
+
+        os.makedirs(extraction_dir, 0o755, exist_ok=True)
+
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                     dir=extraction_dir)
 

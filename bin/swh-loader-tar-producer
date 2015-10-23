@@ -10,7 +10,7 @@ import os
 import sys
 
 from swh.core import config
-from swh.loader.tar import tasks, tarball, build
+from swh.loader.tar import tarball, build
 
 
 def list_archives_from_dir(path):
@@ -72,10 +72,12 @@ def list_archives_from(path):
             'Input incorrect, %s must be a file or a directory.' % path)
 
 
-def compute_message_from(conf, root_dir, tarpath, filename, dry_run=False):
+def compute_message_from(app, conf, root_dir, tarpath, filename,
+                         dry_run=False):
     """Compute and post the message to worker for the archive tarpath.
 
     Args:
+        app: instance of the celery app
         conf: dictionary holding static metadata
         root_dir: root directory
         tarball: the archive's representation
@@ -98,21 +100,22 @@ def compute_message_from(conf, root_dir, tarpath, filename, dry_run=False):
     release = build.compute_release(filename, tarpath)
 
     if not dry_run:
-        task = tasks.LoadTarRepository()
-        task.apply_async((tarpath,
-                          origin,
-                          revision,
-                          release,
-                          occurrences))
+        app.tasks['swh.loader.tar.tasks.LoadTarRepository'].delay(tarpath,
+                                                                  origin,
+                                                                  revision,
+                                                                  release,
+                                                                  occurrences)
 
 
-def produce_archive_messages_from(conf, path, mirror_file=None, dry_run=False):
+def produce_archive_messages_from(app, conf, path, mirror_file=None,
+                                  dry_run=False):
     """From path, produce archive tarball messages to celery.
 
     Will print error message when some computation arise on archive
     and continue.
 
     Args:
+        app: instance of the celery app
         conf: dictionary holding static metadata
         path: top directory to list archives from.
         mirror_file: a filtering file of tarballs to load
@@ -132,7 +135,7 @@ def produce_archive_messages_from(conf, path, mirror_file=None, dry_run=False):
     for tarpath, fname in list_archives_from(path_source_tarballs):
         count += 1
         try:
-            compute_message_from(conf, path, tarpath, fname, dry_run)
+            compute_message_from(app, conf, path, tarpath, fname, dry_run)
         except ValueError:
             print('Problem with the following archive: %s' % tarpath)
 
@@ -208,12 +211,16 @@ if __name__ == '__main__':
         print('Missing configuration file option.')
         sys.exit(1)
 
+    # instantiate celery app with its configuration
+    from swh.core.worker import app
+
     conf = load_config(config_file)
 
     nb_tarballs = produce_archive_messages_from(
+        app,
         conf,
         conf['mirror_root_directory'],
         conf.get('mirror_subset_archives'),
         args.dry_run)
 
-    print('%s tarballs send to worker.' % nb_tarballs)
+    print('%s tarball(s) sent to worker.' % nb_tarballs)
