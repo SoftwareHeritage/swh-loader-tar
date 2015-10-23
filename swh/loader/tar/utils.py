@@ -20,7 +20,8 @@ extensions = [
     'diff',
     'iso',
     'exe',
-    'jar'
+    'jar',
+    'egg'
 ]
 
 

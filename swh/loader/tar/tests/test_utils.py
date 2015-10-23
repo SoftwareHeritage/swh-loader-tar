@@ -30,6 +30,8 @@ class TestUtils(unittest.TestCase):
             'findutils-4.2.18.tar.bzip2': (
                 'findutils-', '4.2.18', '.tar.bzip2'),
             'gnunet-java-0.9.4.jar': ('gnunet-java-', '0.9.4', '.jar'),
+            'pycdio-0.15-py2.5-linux-i686.egg': (
+                'pycdio-', '0.15-py2.5-linux-i686', '.egg'),
 
             # . separator
             'greg-1.4.tar.gz': ('greg-', '1.4', '.tar.gz'),
