@@ -26,6 +26,7 @@ extensions = [
     'xpi',
     'apk',
     'dmg',
+    'DevPak',
 ]
 
 

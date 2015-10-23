@@ -40,6 +40,7 @@ class TestUtils(unittest.TestCase):
                 'icecatmobile-', '31.8.0.en-US.android-arm', '.apk'),
             'icecat-31.8.0.en-US.mac.dmg': (
                 'icecat-', '31.8.0.en-US.mac', '.dmg'),
+            'gnutls-3.0.21-1gn.DevPak': ('gnutls-', '3.0.21-1gn', '.DevPak'),
 
             # . separator
             'greg-1.4.tar.gz': ('greg-', '1.4', '.tar.gz'),
