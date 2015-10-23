@@ -216,4 +216,4 @@ if __name__ == '__main__':
         conf.get('mirror_subset_archives'),
         args.dry_run)
 
-    print('%s tarballs send to worker.' % nb_tarballs)
+    print('%s tarball(s) sent to worker.' % nb_tarballs)
