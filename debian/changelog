@@ -1,3 +1,11 @@
+swh-loader-tar (0.0.3-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.3
+  * Debian packaging:
+  * Fix depends version requirement on swh-loader-dir and swh-core
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 23 Oct 2015 14:17:43 +0200
+
 swh-loader-tar (0.0.2-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.2
