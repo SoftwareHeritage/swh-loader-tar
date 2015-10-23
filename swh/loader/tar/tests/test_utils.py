@@ -37,6 +37,9 @@ class TestUtils(unittest.TestCase):
             'icecat-31.8.0.csb.langpack.xpi': (
                 'icecat-', '31.8.0.csb.langpack', '.xpi'),
 
+            'icecatmobile-31.8.0.en-US.android-arm.apk': (
+                'icecatmobile-', '31.8.0.en-US.android-arm', '.apk'),
+
             # . separator
             'greg-1.4.tar.gz': ('greg-', '1.4', '.tar.gz'),
 

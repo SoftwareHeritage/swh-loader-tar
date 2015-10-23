@@ -24,6 +24,7 @@ extensions = [
     'egg',
     'gem',
     'xpi',
+    'apk',
 ]
 
 
