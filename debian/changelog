@@ -1,8 +1,10 @@
-swh-loader-tar (0.0.3-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.4-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.4
+  * debian package:
+  * Upgrade minimum dependency version on swh.loader.dir
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 23 Oct 2015 14:17:43 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 23 Oct 2015 15:02:47 +0200
 
 swh-loader-tar (0.0.3-1~swh1) unstable-swh; urgency=medium
 
