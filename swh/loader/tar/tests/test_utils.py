@@ -32,6 +32,7 @@ class TestUtils(unittest.TestCase):
             'gnunet-java-0.9.4.jar': ('gnunet-java-', '0.9.4', '.jar'),
             'pycdio-0.15-py2.5-linux-i686.egg': (
                 'pycdio-', '0.15-py2.5-linux-i686', '.egg'),
+            'rbcdio-0.04.gem': ('rbcdio-', '0.04', '.gem'),
 
             # . separator
             'greg-1.4.tar.gz': ('greg-', '1.4', '.tar.gz'),

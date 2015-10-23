@@ -21,7 +21,8 @@ extensions = [
     'iso',
     'exe',
     'jar',
-    'egg'
+    'egg',
+    'gem'
 ]
 
 
