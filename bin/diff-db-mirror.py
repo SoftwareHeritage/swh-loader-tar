@@ -93,7 +93,8 @@ def parse_args():
 
     """
     cli = argparse.ArgumentParser(
-        description='Diff between db and local fs mirror tarballs directory.')
+        description='Diff between db and local fs mirror tarballs directory.'
+                    'Output what\'s on disk and not on db.')
     cli.add_argument('--db-url', '-d',
                      help='db-url string')
     cli.add_argument('--mirror-root-directory', '-m',
