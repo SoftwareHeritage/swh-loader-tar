@@ -89,7 +89,7 @@ def swh_occurrence(tarpath):
         Occurrence dictionary (cf. _build_occurrence)
 
     """
-    validity_ts = os.lstat(tarpath).st_atime
+    validity_ts = os.lstat(tarpath).st_ctime
     return _build_occurrence(tarpath, SWH_AUTHORITY, validity_ts)
 
 
