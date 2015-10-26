@@ -159,3 +159,34 @@ number of potential tarball messages computed.
 Help:
 
     swh-loader-tar-producer -h
+
+
+diff-db-mirror
+==============
+
+Utility to compute the difference between the `occurrence_history` table
+(column branch) and the actual mirror path on disk.
+This will output the path to the tarballs not injected in db (for any reason).
+
+This output is to be consumed by the swh-loader-tar-producer in replay mode.
+
+
+Sample use:
+
+    ./bin/diff-db-mirror.py \
+      --db-url 'host=<host> dbname=<db> user=<user> password=<pass>' \
+      --mirror-root-directory /path/to/mirrors/gnu.org/old-gnu
+
+Here is a sample output:
+
+    ...
+    /home/storage/space/mirrors/gnu.org/gnu/miscfiles/miscfiles-1.4.2.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.4.5.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.3.10.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.4.8.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.3.5.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.3.7.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.3.14.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.2.59.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.3.9.tar.gz
+    /home/storage/space/mirrors/gnu.org/gnu/zile/zile-2.3.11.tar.gz
