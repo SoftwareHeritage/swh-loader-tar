@@ -20,7 +20,7 @@ setup(
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/diffusion/DLDTAR',
     packages=['swh.loader.tar', 'swh.loader.tar.tests'],
-    scripts=['bin/swh-loader-tar-producer',
+    scripts=['bin/swh-loader-tar-lister',
              'bin/swh-diff-db-mirror'],
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],
