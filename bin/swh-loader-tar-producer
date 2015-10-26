@@ -213,6 +213,7 @@ if __name__ == '__main__':
 
     # instantiate celery app with its configuration
     from swh.core.worker import app
+    from swh.loader.tar import tasks  # noqa
 
     conf = load_config(config_file)
 
