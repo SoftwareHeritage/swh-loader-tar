@@ -7,6 +7,7 @@ README
 requirements.txt
 setup.py
 version.txt
+bin/swh-diff-db-mirror
 bin/swh-loader-tar-producer
 debian/changelog
 debian/compat
