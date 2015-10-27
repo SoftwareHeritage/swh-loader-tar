@@ -79,9 +79,9 @@ class TarLoader(loader.DirLoader):
             self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
             tarball.uncompress(tarpath, dir_path)
 
-            objects = super().process(dir_path, origin, revision, release,
-                                      occurrences)
+            result = super().process(dir_path, origin, revision, release,
+                                     occurrences)
         finally:
             shutil.rmtree(dir_path)
             # mark the end of the loading
-            self.close_fetch_history(fetch_history_id, objects)
+            self.close_fetch_history(fetch_history_id, result)
