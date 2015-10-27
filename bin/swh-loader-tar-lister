@@ -12,6 +12,9 @@ import sys
 from swh.core import config
 from swh.loader.tar import tarball, build
 
+SWH_AUTHORITY = 1
+GNU_AUTHORITY = 2
+
 
 def list_archives_from_dir(path):
     """Given a path to a directory, walk such directory and yield tuple of
@@ -95,8 +98,8 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
                                   root_dir,
                                   tarpath)
     revision = build.compute_revision()
-    occurrences = [build.gnu_occurrence(tarpath),
-                   build.swh_occurrence(tarpath)]
+    occurrences = [build.occurrence_with_mtime(GNU_AUTHORITY, tarpath),
+                   build.occurrence_with_ctime(SWH_AUTHORITY, tarpath)]
     release = build.compute_release(filename, tarpath)
 
     if not dry_run:

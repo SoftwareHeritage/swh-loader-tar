@@ -29,8 +29,6 @@ REVISION = {
     'type': REVISION_TYPE,
     'message': REVISION_MESSAGE,
 }
-SWH_AUTHORITY = 1
-GNU_AUTHORITY = 2
 
 
 def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
@@ -79,10 +77,11 @@ def _build_occurrence(tarpath, authority_id, validity_ts):
     }
 
 
-def swh_occurrence(tarpath):
-    """Compute the occurrence from the tarpath with swh authority.
+def occurrence_with_ctime(authority, tarpath):
+    """Compute the occurrence using the tarpath's ctime.
 
     Args:
+        authority: the authority's uuid
         tarpath: file's path
 
     Returns:
@@ -90,7 +89,7 @@ def swh_occurrence(tarpath):
 
     """
     validity_ts = os.lstat(tarpath).st_ctime
-    return _build_occurrence(tarpath, SWH_AUTHORITY, validity_ts)
+    return _build_occurrence(tarpath, authority, validity_ts)
 
 
 def _time_from_path(tarpath):
@@ -100,10 +99,11 @@ def _time_from_path(tarpath):
     return os.lstat(tarpath).st_mtime
 
 
-def gnu_occurrence(tarpath):
-    """Compute the occurrence from the tarpath with gnu authority.
+def occurrence_with_mtime(authority, tarpath):
+    """Compute the occurrence from the tarpath using the tarpath's mtime.
 
     Args:
+        authority: the authority's uuid
         tarpath: file's path
 
     Return:
@@ -111,7 +111,7 @@ def gnu_occurrence(tarpath):
 
     """
     validity_ts = _time_from_path(tarpath)
-    return _build_occurrence(tarpath, GNU_AUTHORITY, validity_ts)
+    return _build_occurrence(tarpath, authority, validity_ts)
 
 
 def compute_revision():
