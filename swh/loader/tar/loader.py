@@ -86,7 +86,15 @@ class TarLoader(loader.DirLoader):
 
             result = super().process(dir_path, origin, revision, release,
                                      occurrences)
+
         finally:
             shutil.rmtree(dir_path)
+
+            status = result['status']
+            if not status:
+                # Enrich the error message with the tarball
+                result['stderr'] = 'archive: %s\n%s' % (
+                    tarpath, result.get('stderr', ''))
+
             # mark the end of the loading
             self.close_fetch_history(fetch_history_id, result)
