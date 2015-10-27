@@ -12,9 +12,6 @@ import sys
 from swh.core import config
 from swh.loader.tar import tarball, build
 
-SWH_AUTHORITY = 1
-GNU_AUTHORITY = 2
-
 
 def list_archives_from_dir(path):
     """Given a path to a directory, walk such directory and yield tuple of
@@ -219,6 +216,10 @@ if __name__ == '__main__':
     from swh.loader.tar import tasks  # noqa
 
     conf = load_config(config_file)
+
+    # state...
+    SWH_AUTHORITY = conf['swh_authority']
+    GNU_AUTHORITY = conf['gnu_authority']
 
     nb_tarballs = produce_archive_messages_from(
         app,
