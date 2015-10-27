@@ -96,8 +96,7 @@ class TarLoader(loader.DirLoader):
             e_info = sys.exc_info()
             if not result['status']:
                 # Enrich the error message with the tarball
-                result['stderr'] = 'archive:%s\nreason: %s\ntrace: %s\n%s' % (
-                    tarpath,
+                result['stderr'] = 'reason: %s\ntrace: %s\n%s' % (
                     e_info[1],
                     ''.join(traceback.format_tb(e_info[2])),
                     result.get('stderr', ''))
@@ -105,6 +104,11 @@ class TarLoader(loader.DirLoader):
             raise
         finally:
             shutil.rmtree(dir_path)
+
+            if not result['status']:
+                result['stderr'] = 'archive:%s\n%s' % (
+                    tarpath,
+                    result.get('stderr', ''))
 
             # mark the end of the loading
             self.close_fetch_history(fetch_history_id, result)
