@@ -7,6 +7,8 @@ import logging
 import os
 import tempfile
 import shutil
+import sys
+import traceback
 
 from swh.loader.dir import loader
 from swh.loader.tar import tarball
@@ -80,6 +82,9 @@ class TarLoader(loader.DirLoader):
 
         # T22: add checksums in revision
 
+        # for edge cases (NotImplemented...)
+        result = {'status': False, 'stderr': ''}
+
         try:
             self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
             tarball.uncompress(tarpath, dir_path)
@@ -87,14 +92,19 @@ class TarLoader(loader.DirLoader):
             result = super().process(dir_path, origin, revision, release,
                                      occurrences)
 
+        except:
+            e_info = sys.exc_info()
+            if not result['status']:
+                # Enrich the error message with the tarball
+                result['stderr'] = 'archive:%s\nreason: %s\ntrace: %s\n%s' % (
+                    tarpath,
+                    e_info[1],
+                    ''.join(traceback.format_tb(e_info[2])),
+                    result.get('stderr', ''))
+
+            raise
         finally:
             shutil.rmtree(dir_path)
-
-            status = result['status']
-            if not status:
-                # Enrich the error message with the tarball
-                result['stderr'] = 'archive: %s\n%s' % (
-                    tarpath, result.get('stderr', ''))
 
             # mark the end of the loading
             self.close_fetch_history(fetch_history_id, result)
