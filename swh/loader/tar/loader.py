@@ -91,12 +91,11 @@ class TarLoader(loader.DirLoader):
 
             result = super().process(dir_path, origin, revision, release,
                                      occurrences)
-
         except:
             e_info = sys.exc_info()
             if not result['status']:
                 # Enrich the error message with the tarball
-                result['stderr'] = 'reason: %s\ntrace: %s\n%s' % (
+                result['stderr'] = 'reason:%s\ntrace:%s\n%s' % (
                     e_info[1],
                     ''.join(traceback.format_tb(e_info[2])),
                     result.get('stderr', ''))
@@ -106,7 +105,7 @@ class TarLoader(loader.DirLoader):
             shutil.rmtree(dir_path)
 
             if not result['status']:
-                result['stderr'] = 'archive:%s\n%s' % (
+                result['stderr'] = 'archive:%s\nreason:%s' % (
                     tarpath,
                     result.get('stderr', ''))
 
