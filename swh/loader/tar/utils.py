@@ -121,7 +121,7 @@ def convert_to_hex(d):
         return d
 
     checksums = {}
-    for key_hash in d:
-        checksums[key_hash] = hashutil.hash_to_hex(d[key_hash])
+    for key, h in d.items():
+        checksums[key] = hashutil.hash_to_hex(h)
 
     return checksums
