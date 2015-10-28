@@ -10,8 +10,9 @@ import shutil
 import sys
 import traceback
 
+from swh.core import hashutil
 from swh.loader.dir import loader
-from swh.loader.tar import tarball
+from swh.loader.tar import tarball, utils
 
 
 class TarLoader(loader.DirLoader):
@@ -80,7 +81,9 @@ class TarLoader(loader.DirLoader):
         # - create tarball as content in storage
         # - transit the information to the loader dir
 
-        # T22: add checksums in revision
+        # add checksums in revision
+        hashes = utils.convert_to_hex(hashutil.hashfile(tarpath))
+        revision['metadata'] = {'checksums': hashes}
 
         # for edge cases (NotImplemented...)
         result = {'status': False, 'stderr': ''}

@@ -5,6 +5,8 @@
 
 import re
 
+from swh.core import hashutil
+
 
 # FIXME; extract this in property
 # to recognize existing naming pattern
@@ -102,3 +104,24 @@ def commonname(path0, path1, as_str=False):
 
     """
     return path1.split(path0)[1]
+
+
+def convert_to_hex(d):
+    """Convert a flat dictionary with bytes in values to the same dictionary
+    with hex as values.
+
+    Args:
+        dict: flat dictionary with sha bytes in their values.
+
+    Returns:
+        Mirror dictionary with values as string hex.
+
+    """
+    if not d:
+        return d
+
+    checksums = {}
+    for key_hash in d:
+        checksums[key_hash] = hashutil.hash_to_hex(d[key_hash])
+
+    return checksums
