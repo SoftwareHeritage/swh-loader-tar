@@ -66,6 +66,7 @@ class TarLoader(loader.DirLoader):
         """
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'
+
         origin['id'] = self.storage.origin_add_one(origin)
 
         # Mark the start of the loading
@@ -82,8 +83,12 @@ class TarLoader(loader.DirLoader):
         # - transit the information to the loader dir
 
         # add checksums in revision
-        hashes = utils.convert_to_hex(hashutil.hashfile(tarpath))
-        revision['metadata'] = {'checksums': hashes}
+        artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
+        artifact['name'] = os.path.basename(tarpath)
+
+        revision['metadata'] = {
+            'original-artifact': [artifact]
+        }
 
         # for edge cases (NotImplemented...)
         result = {'status': False, 'stderr': ''}
