@@ -3,15 +3,12 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
-import shutil
-import tempfile
+from swh.core.scheduling import Task
 
-from swh.loader.dir import tasks
-from swh.loader.tar import tarball
+from swh.loader.tar.loader import TarLoader
 
 
-class LoadTarRepository(tasks.LoadDirRepository):
+class LoadTarRepository(Task):
     """Import a tarball to Software Heritage
 
     """
@@ -22,32 +19,21 @@ class LoadTarRepository(tasks.LoadDirRepository):
         'extraction_dir': ('str', '/tmp/swh.loader.tar/'),
     }
 
+    def __init__(self):
+        self.config = TarLoader.parse_config_file(
+            base_filename=self.CONFIG_BASE_FILENAME,
+            additional_configs=[self.ADDITIONAL_CONFIG],
+        )
+
     def run(self, tarpath, origin, revision, release, occurrences):
         """Import a tarball into swh.
 
         Args:
             - tarpath: path to a tarball file
-            - origin, revision, release, occurrences: see LoadDirRepository.run
+            - origin, revision, release, occurrences:
+              cf. swh.loader.dir.loader.run docstring
 
         """
-        extraction_dir = self.config['extraction_dir']
-
-        os.makedirs(extraction_dir, 0o755, exist_ok=True)
-
-        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
-                                    dir=extraction_dir)
-
-        if 'type' not in origin:  # let the type flow if present
-            origin['type'] = 'tar'
-
-        try:
-            self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
-            tarball.uncompress(tarpath, dir_path)
-
-            super().run(dir_path,
-                        origin,
-                        revision,
-                        release,
-                        occurrences)
-        finally:  # always clean up
-            shutil.rmtree(dir_path)
+        loader = TarLoader(self.config)
+        loader.log = self.log
+        loader.process(tarpath, origin, revision, release, occurrences)

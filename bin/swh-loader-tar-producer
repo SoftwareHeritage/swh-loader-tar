@@ -6,70 +6,10 @@
 # See top-level LICENSE file for more information
 
 import argparse
-import os
 import sys
 
 from swh.core import config
-from swh.loader.tar import tarball, build
-
-
-def list_archives_from_dir(path):
-    """Given a path to a directory, walk such directory and yield tuple of
-    tarpath, fname.
-
-    Args:
-        path: top level directory
-
-    Returns:
-        Generator of tuple tarpath, filename with tarpath a tarball.
-
-    """
-    for dirpath, dirnames, filenames in os.walk(path):
-        for fname in filenames:
-            tarpath = os.path.join(dirpath, fname)
-            if not os.path.exists(tarpath):
-                continue
-
-            if tarball.is_tarball(tarpath):
-                yield tarpath, fname
-
-
-def list_archives_from_file(mirror_file):
-    """Given a path to a file containing one tarball per line, yield a tuple of
-    tarpath, fname.
-
-    Args:
-        mirror_file: path to the file containing list of tarpath.
-
-    Returns:
-        Generator of tuple tarpath, filename with tarpath a tarball.
-
-    """
-    with open(mirror_file, 'r') as f:
-        for tarpath in f.readlines():
-            tarpath = tarpath.strip()
-            if not os.path.exists(tarpath):
-                print('WARN: %s does not exist. Skipped.' % tarpath)
-                continue
-
-            if tarball.is_tarball(tarpath):
-                yield tarpath, os.path.basename(tarpath)
-
-
-def list_archives_from(path):
-    """From path, list tuple of tarpath, fname.
-
-    Args:
-        path: top directory to list archives from or custom file format.
-
-    """
-    if os.path.isfile(path):
-        yield from list_archives_from_file(path)
-    elif os.path.isdir(path):
-        yield from list_archives_from_dir(path)
-    else:
-        raise ValueError(
-            'Input incorrect, %s must be a file or a directory.' % path)
+from swh.loader.tar import build, file
 
 
 def compute_message_from(app, conf, root_dir, tarpath, filename,
@@ -95,8 +35,8 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
                                   root_dir,
                                   tarpath)
     revision = build.compute_revision()
-    occurrences = [build.gnu_occurrence(tarpath),
-                   build.swh_occurrence(tarpath)]
+    occurrences = [build.occurrence_with_mtime(GNU_AUTHORITY, tarpath),
+                   build.occurrence_with_ctime(SWH_AUTHORITY, tarpath)]
     release = build.compute_release(filename, tarpath)
 
     if not dry_run:
@@ -132,7 +72,7 @@ def produce_archive_messages_from(app, conf, path, mirror_file=None,
     count = 0
 
     path_source_tarballs = mirror_file if mirror_file else path
-    for tarpath, fname in list_archives_from(path_source_tarballs):
+    for tarpath, fname in file.list_archives_from(path_source_tarballs):
         count += 1
         try:
             compute_message_from(app, conf, path, tarpath, fname, dry_run)
@@ -216,6 +156,10 @@ if __name__ == '__main__':
     from swh.loader.tar import tasks  # noqa
 
     conf = load_config(config_file)
+
+    # state...
+    SWH_AUTHORITY = conf['swh_authority']
+    GNU_AUTHORITY = conf['gnu_authority']
 
     nb_tarballs = produce_archive_messages_from(
         app,
