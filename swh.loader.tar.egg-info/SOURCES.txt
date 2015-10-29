@@ -9,6 +9,7 @@ setup.py
 version.txt
 bin/swh-diff-db-mirror
 bin/swh-loader-tar-producer
+bin/swh-ls-tarball-size
 debian/changelog
 debian/compat
 debian/control
@@ -24,6 +25,8 @@ swh.loader.tar.egg-info/dependency_links.txt
 swh.loader.tar.egg-info/requires.txt
 swh.loader.tar.egg-info/top_level.txt
 swh/loader/tar/build.py
+swh/loader/tar/file.py
+swh/loader/tar/loader.py
 swh/loader/tar/tarball.py
 swh/loader/tar/tasks.py
 swh/loader/tar/utils.py

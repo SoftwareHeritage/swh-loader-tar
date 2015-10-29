@@ -101,8 +101,8 @@ Tar Producer
 ============
 
 Its job is to compulse from a file or a folder a list of existing
-tarball. From this list, compute the celery message to send to the
-loader tar worker to consume.
+tarball. From this list, compute the corresponding messages to
+send to the broker.
 
 #### Configuration
 
@@ -111,10 +111,12 @@ Message producer's configuration file:
     [main]
 
     # mirror's root directory holding tarballs to load into swh
-    mirror_root_directory = /home/storage/space/mirrors/gnu.org/gnu/
+    mirror_root_directory = /srv/storage/space/mirrors/gnu.org/gnu/
+    # mirror_root_directory = /srv/storage/space/mirrors/gnu.org/old-gnu/
 
     # url scheme prefix used to create the origin url
     url_scheme = http://ftp.gnu.org/gnu/
+    # url_scheme = rsync://ftp.gnu.org/old-gnu/
 
     # origin type used for those tarballs
     type = ftp
@@ -130,6 +132,10 @@ Message producer's configuration file:
     # For tryouts purposes (no limit if commented or omitted)
     # limit = 1
 
+    gnu_authority = 4706c92a-8173-45d9-93d7-06523f249398
+    swh_authority = 5f4d4c51-498a-4e28-88b3-b3e4e8396cba
+
+
 #### Run
 
 Trigger the message computations:
@@ -142,7 +148,7 @@ celery).
 
 If the `mirror_subset_archives` is provided, the tarball messages will
 be computed from such file (the mirror_root_directory is still used so
-be consistent).
+please be consistent).
 
 If problem arises during tarball message computation, a message will be
 outputed with the tarball that present a problem.
@@ -173,7 +179,7 @@ This output is to be consumed by the swh-loader-tar-producer in replay mode.
 
 Sample use:
 
-    ./bin/diff-db-mirror.py \
+    ./bin/swh-diff-db-mirror \
       --db-url 'host=<host> dbname=<db> user=<user> password=<pass>' \
       --mirror-root-directory /path/to/mirrors/gnu.org/old-gnu
 
