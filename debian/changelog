@@ -1,3 +1,20 @@
+swh-loader-tar (0.0.7-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.7
+  * Send tarball's checksums as metadata in revision table
+  * Use fetch_history table
+  * Update README
+  * Load authorities from configuration file
+  * Improve tar loader architecture
+  * Improve celery task (by simplifying it to a shim layer around the
+    tar loader)
+  * Improve error messages policy
+  * Fix time used (use ctime instead of atime) for authority swh
+  * debian packaging:
+  * clarify dependency list
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 29 Oct 2015 11:09:36 +0100
+
 swh-loader-tar (0.0.6-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.6
