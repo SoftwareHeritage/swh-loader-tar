@@ -72,7 +72,10 @@ def produce_archive_messages_from(app, conf, path, mirror_file=None,
     count = 0
 
     path_source_tarballs = mirror_file if mirror_file else path
-    for tarpath, fname in file.list_archives_from(path_source_tarballs):
+    archives = list(file.list_archives_from(path_source_tarballs))
+    archives.shuffle()
+
+    for tarpath, fname in archives:
         count += 1
         try:
             compute_message_from(app, conf, path, tarpath, fname, dry_run)
