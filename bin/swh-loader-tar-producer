@@ -47,7 +47,8 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
                                                                   occurrences)
 
 
-def produce_archive_messages_from(app, conf, path, mirror_file=None,
+def produce_archive_messages_from(app, conf, path,
+                                  mirror_file=None,
                                   dry_run=False):
     """From path, produce archive tarball messages to celery.
 
@@ -68,19 +69,21 @@ def produce_archive_messages_from(app, conf, path, mirror_file=None,
         None
 
     """
+
     LIMIT = conf['limit']
+    BLOCK = int(conf['block_messages'])
     count = 0
 
     path_source_tarballs = mirror_file if mirror_file else path
-    for tarpath, fname in file.list_archives_from(path_source_tarballs):
+
+    for tarpath, fname in file.random_archives_from(path_source_tarballs,
+                                                    BLOCK,
+                                                    LIMIT):
         count += 1
         try:
             compute_message_from(app, conf, path, tarpath, fname, dry_run)
         except ValueError:
             print('Problem with the following archive: %s' % tarpath)
-
-        if LIMIT and count >= LIMIT:
-            return count
 
     return count
 

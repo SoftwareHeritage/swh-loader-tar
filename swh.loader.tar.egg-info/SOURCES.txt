@@ -17,7 +17,8 @@ debian/copyright
 debian/rules
 debian/source/format
 resources/loader/tar.ini
-resources/producer/tar.ini
+resources/producer/tar-gnu.ini
+resources/producer/tar-old-gnu.ini
 scratch/count_tarballs.py
 swh.loader.tar.egg-info/PKG-INFO
 swh.loader.tar.egg-info/SOURCES.txt
