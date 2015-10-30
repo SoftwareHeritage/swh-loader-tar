@@ -6,8 +6,6 @@
 # See top-level LICENSE file for more information
 
 import argparse
-import itertools
-import random
 import sys
 
 from swh.core import config
@@ -49,45 +47,6 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
                                                                   occurrences)
 
 
-def grouper(iterable, n, fillvalue=None):
-    """Collect data into fixed-length chunks or blocks.
-
-    Args:
-        iterable: an iterable
-        n: size of block
-        fillvalue: value to use for the last block
-
-    Returns:
-        fixed-length chunks of blocks as iterables
-
-    """
-    args = [iter(iterable)] * n
-    return itertools.zip_longest(*args, fillvalue=fillvalue)
-
-
-def random_blocks(iterable, block=100, fillvalue=None):
-    """Given an iterable:
-    - slice the iterable in data set of block-sized elements
-    - randomized the data set
-    - yield each element
-
-    Args:
-        iterable: iterable of data
-        block: number of elements per block
-        fillvalue: a fillvalue for the last block if not enough values in
-        last block
-
-    Returns:
-        An iterable of element.
-
-    """
-    for iterable in grouper(iterable, block, fillvalue=fillvalue):
-        l = list(iterable)
-        random.shuffle(l)
-        for e in l:
-            yield e
-
-
 def produce_archive_messages_from(app, conf, path,
                                   mirror_file=None,
                                   dry_run=False):
@@ -117,15 +76,9 @@ def produce_archive_messages_from(app, conf, path,
 
     path_source_tarballs = mirror_file if mirror_file else path
 
-    archives = file.archives_from(path_source_tarballs)
-    random_archives = random_blocks(archives,
-                                    BLOCK,
-                                    fillvalue=(None, None))
-
-    if LIMIT:
-        random_archives = itertools.islice(random_archives, LIMIT)
-
-    for tarpath, fname in [(t, f) for t, f in random_archives if t and f]:
+    for tarpath, fname in file.random_archives_from(path_source_tarballs,
+                                                    BLOCK,
+                                                    LIMIT):
         count += 1
         try:
             compute_message_from(app, conf, path, tarpath, fname, dry_run)
