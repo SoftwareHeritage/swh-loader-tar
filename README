@@ -110,15 +110,15 @@ Message producer's configuration file:
 
     [main]
 
-    # mirror's root directory holding tarballs to load into swh
+    # Mirror's root directory holding tarballs to load into swh
     mirror_root_directory = /srv/storage/space/mirrors/gnu.org/gnu/
     # mirror_root_directory = /srv/storage/space/mirrors/gnu.org/old-gnu/
 
-    # url scheme prefix used to create the origin url
+    # Url scheme prefix used to create the origin url
     url_scheme = http://ftp.gnu.org/gnu/
     # url_scheme = rsync://ftp.gnu.org/old-gnu/
 
-    # origin type used for those tarballs
+    # Origin type used for tarballs
     type = ftp
 
     # File containing a subset list tarballs from mirror_root_directory to load.
@@ -129,11 +129,17 @@ Message producer's configuration file:
     # completely as usual
     # mirror_subset_archives = /home/storage/missing-archives
 
-    # For tryouts purposes (no limit if commented or omitted)
-    # limit = 1
-
+    # Authorities
     gnu_authority = 4706c92a-8173-45d9-93d7-06523f249398
     swh_authority = 5f4d4c51-498a-4e28-88b3-b3e4e8396cba
+
+    # Randomize blocks of messages and send for consumption
+    block_messages = 250
+
+    # DEV options
+
+    # Tryouts purposes (no limit if not specified)
+    # limit = 10
 
 
 #### Run
