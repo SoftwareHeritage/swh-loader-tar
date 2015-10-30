@@ -8,7 +8,7 @@ import os
 from swh.loader.tar import tarball
 
 
-def list_archives_from_dir(path):
+def archives_from_dir(path):
     """Given a path to a directory, walk such directory and yield tuple of
     tarpath, fname.
 
@@ -29,7 +29,7 @@ def list_archives_from_dir(path):
                 yield tarpath, fname
 
 
-def list_archives_from_file(mirror_file):
+def archives_from_file(mirror_file):
     """Given a path to a file containing one tarball per line, yield a tuple of
     tarpath, fname.
 
@@ -51,7 +51,7 @@ def list_archives_from_file(mirror_file):
                 yield tarpath, os.path.basename(tarpath)
 
 
-def list_archives_from(path):
+def archives_from(path):
     """From path, list tuple of tarpath, fname.
 
     Args:
@@ -59,9 +59,9 @@ def list_archives_from(path):
 
     """
     if os.path.isfile(path):
-        yield from list_archives_from_file(path)
+        yield from archives_from_file(path)
     elif os.path.isdir(path):
-        yield from list_archives_from_dir(path)
+        yield from archives_from_dir(path)
     else:
         raise ValueError(
             'Input incorrect, %s must be a file or a directory.' % path)

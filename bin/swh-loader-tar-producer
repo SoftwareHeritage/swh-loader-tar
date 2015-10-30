@@ -117,7 +117,7 @@ def produce_archive_messages_from(app, conf, path,
 
     path_source_tarballs = mirror_file if mirror_file else path
 
-    archives = file.list_archives_from(path_source_tarballs)
+    archives = file.archives_from(path_source_tarballs)
     random_archives = random_blocks(archives,
                                     BLOCK,
                                     fillvalue=(None, None))
