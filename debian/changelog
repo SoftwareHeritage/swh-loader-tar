@@ -1,3 +1,10 @@
+swh-loader-tar (0.0.8-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.8
+  * Stream random blocks of tarballs message
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 30 Oct 2015 12:12:53 +0100
+
 swh-loader-tar (0.0.7-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.7
