@@ -79,9 +79,9 @@ def produce_archive_messages_from(app, conf, path,
     for tarpath, fname in file.random_archives_from(path_source_tarballs,
                                                     BLOCK,
                                                     LIMIT):
-        count += 1
         try:
             compute_message_from(app, conf, path, tarpath, fname, dry_run)
+            count += 1
         except ValueError:
             print('Problem with the following archive: %s' % tarpath)
 
