@@ -1,8 +1,11 @@
-swh-loader-tar (0.0.8-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.9-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.9
+  * Uncompress safe archive only
+  * Bump dependency to swh.loader.dir to v0.0.12
+  * Fix miscounting the number of sent messages
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 30 Oct 2015 12:12:53 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 02 Nov 2015 15:42:33 +0100
 
 swh-loader-tar (0.0.8-1~swh1) unstable-swh; urgency=medium
 
