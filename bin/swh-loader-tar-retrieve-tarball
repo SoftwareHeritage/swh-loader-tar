@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+# NOT FOR PRODUCTION (does not use the swh storage api yet)
+
+# Copyright (C) 2015  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
+from swh.loader.tar import db
+from swh.core import hashutil
+
+
+def escape_hash(sha1):
+    """Escape an hexa sha1 to a ready queryable sha1."""
+    return '\\x%s' % sha1
+
+
+def upper_directory_from(db_url, revision_id):
+    """Return the directory sha1 the revision with id revision_id points to.
+
+    """
+    with db.connect(db_url) as db_conn:
+        res = db.query_fetch(
+                db_conn,
+                ("""select directory
+                    from revision
+                    where id=%s
+                    limit 1
+                """, (escape_hash(revision_id),)))
+
+        for directory in res:
+            return directory[0]
+
+
+def list_files_from_directory(directory_id):
+    with db.connect(db_url) as db_conn:
+        res = db.query_fetch(
+                db_conn,
+                ("""select dir_id, type, perms, convert_from(name, 'utf-8'), target
+                    from swh_directory_walk(%s);
+                """, (escape_hash(directory_id),)))
+
+        for entry in res:
+            yield {'dir_id': entry[0],
+                   'type': entry[1],
+                   'perms': entry[2],
+                   'name': entry[3],
+                   'target': entry[4]}
+
+
+db_url = 'dbname=softwareheritage-dev'
+revision_id = '2b0b7e719e4afbdb1a161da0529bdb2ddc9a2235'
+
+directory_sha1_bytes = upper_directory_from(db_url, revision_id)
+directory_sha1 = hashutil.hash_to_hex(directory_sha1_bytes)
+
+for entry in list_files_from_directory(directory_sha1):
+    print(entry['perms'], entry['name'], hashutil.hash_to_hex(entry['target']))
