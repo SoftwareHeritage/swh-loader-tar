@@ -9,6 +9,7 @@ import datetime
 
 from swh.loader.tar import utils
 
+
 # Static setup
 EPOCH = 0
 UTC_OFFSET = '+0000'
@@ -17,18 +18,6 @@ SWH_MAIL = 'robot@softwareheritage.org'
 REVISION_MESSAGE = 'synthetic revision message'
 RELEASE_MESSAGE = 'synthetic release message'
 REVISION_TYPE = 'tar'
-REVISION = {
-    'author_date': EPOCH,
-    'author_offset': UTC_OFFSET,
-    'author_name': SWH_PERSON,
-    'author_email': SWH_MAIL,
-    'committer_date': EPOCH,
-    'committer_offset': UTC_OFFSET,
-    'committer_name': SWH_PERSON,
-    'committer_email': SWH_MAIL,
-    'type': REVISION_TYPE,
-    'message': REVISION_MESSAGE,
-}
 
 
 def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
@@ -114,8 +103,40 @@ def occurrence_with_mtime(authority, tarpath):
     return _build_occurrence(tarpath, authority, validity_ts)
 
 
-def compute_revision():
-    return REVISION
+def compute_revision(tarpath):
+    """Compute a revision.
+
+    Args:
+        tarpath: absolute path to the tarball
+
+    Returns:
+        Revision as dict:
+        - author_date: the modification timestamp as returned by a fstat call
+        - author_offset: +0000
+        - committer_date: the modification timestamp as returned by a fstat
+        call
+        - committer_offset: +0000
+        - author_name: cf. SWH_PERSON
+        - author_email: cf. SWH_MAIL
+        - committer_name: cf. SWH_MAIL
+        - committer_email: cf. SWH_MAIL
+        - type: cf. REVISION_TYPE
+        - message: cf. REVISION_MESSAGE
+
+    """
+    ts = _time_from_path(tarpath)
+    return {
+        'author_date': ts,
+        'author_offset': UTC_OFFSET,
+        'committer_date': ts,
+        'committer_offset': UTC_OFFSET,
+        'author_name': SWH_PERSON,
+        'author_email': SWH_MAIL,
+        'committer_name': SWH_PERSON,
+        'committer_email': SWH_MAIL,
+        'type': REVISION_TYPE,
+        'message': REVISION_MESSAGE,
+    }
 
 
 def compute_release(filename, tarpath):
