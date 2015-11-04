@@ -8,6 +8,9 @@
 # See top-level LICENSE file for more information
 
 import argparse
+import os
+import shutil
+import tempfile
 
 from swh.core import hashutil, config
 
@@ -44,12 +47,40 @@ def build_archive_from_revision(revision_id):
     directory_id = upper_directory_from(revision_id)
     print('directory id: %s' % hashutil.hash_to_hex(directory_id))
 
-    count = 0
-    for entry in directory_ls(directory_id, True):
-        count += 1
-        print(entry['perms'], entry['name'], entry['target'])
+    tmpdir = tempfile.mkdtemp(suffix='create-tarball',
+                              prefix='swh.loader.tar',
+                              dir='/tmp')
 
-    print('nb entries: %s' % count)
+    count = 0
+    tarball_name = ''
+    for entry in directory_ls(directory_id, recursive=True):
+        name = entry['name']
+        perms = entry['perms']
+
+        path = os.path.join(tmpdir, name)
+        if count == 0:
+            tarball_name = path  # order in the query
+
+        if perms == 40000:
+            os.makedirs(path, exist_ok=True)
+            os.chmod(path, 0o755)
+        elif perms == 100644:
+            dirpath = os.path.dirname(path)
+            os.makedirs(dirpath, exist_ok=True)
+            os.chmod(dirpath, 0o755)
+
+            open(path, 'w')  # FIXME: add content to it...
+            os.chmod(path, 0o644)
+        else:
+            print('skip link for the moment...')  # FIXME: need content
+            continue
+
+        print(perms, path)
+        count += 1
+
+    print('tarball %s: %s entries' % (tarball_name, count))
+
+    shutil.rmtree(tmpdir)
 
 
 def parse_args():
