@@ -40,6 +40,18 @@ def directory_ls(directory_id, recursive=True):
                'perms': entry[4]}
 
 
+def build_archive_from_revision(revision_id):
+    directory_id = upper_directory_from(revision_id)
+    print('directory id: %s' % hashutil.hash_to_hex(directory_id))
+
+    count = 0
+    for entry in directory_ls(directory_id, True):
+        count += 1
+        print(entry['perms'], entry['name'], entry['target'])
+
+    print('nb entries: %s' % count)
+
+
 def parse_args():
     """Parse the configuration from the cli.
 
@@ -66,13 +78,4 @@ if __name__ == '__main__':
 
     revision_id = hashutil.hex_to_hash(
         '7c82241cb2a564c79f2930ac9416800bbb2a6d3e')
-
-    directory_id = upper_directory_from(revision_id)
-    print('directory id: %s' % hashutil.hash_to_hex(directory_id))
-
-    count = 0
-    for entry in directory_ls(directory_id, True):
-        count += 1
-        print(entry['perms'], entry['name'], entry['target'])
-
-    print('nb entries: %s' % count)
+    build_archive_from_revision(revision_id)
