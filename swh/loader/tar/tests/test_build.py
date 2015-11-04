@@ -85,7 +85,22 @@ class TestBuildUtils(unittest.TestCase):
     @istest
     def compute_revision(self):
         # when
-        actual_revision = build.compute_revision()
+        with patch('swh.loader.tar.build._time_from_path',
+                   return_value='some-other-time'):
+            actual_revision = build.compute_revision('/some/path')
+
+        expected_revision = {
+            'author_date': 'some-other-time',
+            'author_offset': build.UTC_OFFSET,
+            'committer_date': 'some-other-time',
+            'committer_offset': build.UTC_OFFSET,
+            'author_name': build.SWH_PERSON,
+            'author_email': build.SWH_MAIL,
+            'committer_name': build.SWH_PERSON,
+            'committer_email': build.SWH_MAIL,
+            'type': build.REVISION_TYPE,
+            'message': build.REVISION_MESSAGE,
+        }
 
         # then
-        self.assertEquals(actual_revision, build.REVISION)
+        self.assertEquals(actual_revision, expected_revision)
