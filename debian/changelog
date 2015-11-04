@@ -1,8 +1,9 @@
-swh-loader-tar (0.0.10-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.11-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.11
+  * Keep tarball nature (zip, tar) as revision metadata
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 04 Nov 2015 11:57:04 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 04 Nov 2015 17:18:41 +0100
 
 swh-loader-tar (0.0.10-1~swh1) unstable-swh; urgency=medium
 
