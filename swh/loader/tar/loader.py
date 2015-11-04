@@ -82,16 +82,17 @@ class TarLoader(loader.DirLoader):
         artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
         artifact['name'] = os.path.basename(tarpath)
 
-        revision['metadata'] = {
-            'original-artifact': [artifact]
-        }
-
         # for edge cases (NotImplemented...)
         result = {'status': False, 'stderr': ''}
 
         try:
             self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
-            tarball.uncompress(tarpath, dir_path)
+            nature = tarball.uncompress(tarpath, dir_path)
+
+            revision['metadata'] = {
+                'original-artifact': [artifact],
+                'archive-type': nature,
+            }
 
             result = super().process(dir_path, origin, revision, release,
                                      occurrences)
