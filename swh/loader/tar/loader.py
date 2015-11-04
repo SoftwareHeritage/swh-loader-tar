@@ -78,10 +78,6 @@ class TarLoader(loader.DirLoader):
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                     dir=extraction_dir)
 
-        # T62:
-        # - create tarball as content in storage
-        # - transit the information to the loader dir
-
         # add checksums in revision
         artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
         artifact['name'] = os.path.basename(tarpath)
