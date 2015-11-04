@@ -1,3 +1,11 @@
+swh-loader-tar (0.0.10-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.10
+  * Synthetic revision use author and committer date with tarball's
+    mtime
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 04 Nov 2015 11:57:03 +0100
+
 swh-loader-tar (0.0.9-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.9
