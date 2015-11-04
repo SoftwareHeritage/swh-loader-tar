@@ -15,6 +15,8 @@ from swh.storage.api.client import RemoteStorage as Storage
 
 def escape_hash(sha1):
     """Escape an hexa sha1 to a ready queryable sha1."""
+    if isinstance(sha1, bytes):
+        sha1 = hashutil.hash_to_hex(sha1)
     return '\\x%s' % sha1
 
 
@@ -22,34 +24,41 @@ def upper_directory_from(db_url, revision_id):
     """Return the directory sha1 the revision with id revision_id points to.
 
     """
-    revisions = [hashutil.hex_to_hash(revision_id)]
-    for revision in storage.revision_get(revisions):
+    for revision in storage.revision_get([revision_id]):
         return revision['directory']
 
 
-def list_files_from_directory(directory_id):
+def list_files_from_directory2(directory_id_hex):
     with db.connect(db_url) as db_conn:
         res = db.query_fetch(
                 db_conn,
-                ("""select dir_id, type, perms, convert_from(name, 'utf-8'), target
+                ("""select dir_id, type, target, convert_from(name, 'utf-8'), perms
                     from swh_directory_walk(%s);
-                """, (escape_hash(directory_id),)))
+                """, (escape_hash(directory_id_hex),)))
 
         for entry in res:
             yield {'dir_id': entry[0],
                    'type': entry[1],
-                   'perms': entry[2],
+                   'target': entry[3],
                    'name': entry[3],
-                   'target': entry[4]}
+                   'perms': entry[4]}
+
+
+def list_files_from_directory(directory_id_bytes):
+    for entry in storage.directory_get(directory_id_bytes, recursive=True):
+        yield {'dir_id': hashutil.hash_to_hex(entry[0]),
+               'type': entry[1],
+               'target': hashutil.hash_to_hex(entry[2]),
+               'name': entry[3].decode('utf-8'),
+               'perms': entry[4]}
 
 
 storage = Storage('http://localhost:5000/')  # beware the /
 
 db_url = 'dbname=softwareheritage-dev'
-revision_id = '7c82241cb2a564c79f2930ac9416800bbb2a6d3e'
+revision_id = hashutil.hex_to_hash('7c82241cb2a564c79f2930ac9416800bbb2a6d3e')
 
 directory_sha1_bytes = upper_directory_from(db_url, revision_id)
-directory_sha1 = hashutil.hash_to_hex(directory_sha1_bytes)
 
-for entry in list_files_from_directory(directory_sha1):
-    print(entry['perms'], entry['name'], hashutil.hash_to_hex(entry['target']))
+for entry in list_files_from_directory(directory_sha1_bytes):
+    print(entry['perms'], entry['name'], entry['target'])
