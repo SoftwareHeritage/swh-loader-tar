@@ -142,6 +142,9 @@ def uncompress(tarpath, dest):
         tarpath: path to tarball to uncompress
         dest: the destination folder where to uncompress the tarball
 
+    Returns:
+        The nature of the tarball, zip or tar.
+
     Raises:
         ValueError when:
         - an archive member would be extracted outside basepath
@@ -150,8 +153,10 @@ def uncompress(tarpath, dest):
     """
     if tarfile.is_tarfile(tarpath):
         _uncompress_tar(tarpath, dest)
+        nature = 'tar'
     elif zipfile.is_zipfile(tarpath):
         _uncompress_zip(tarpath, dest)
+        nature = 'zip'
     else:
         raise ValueError('File %s is not a supported archive.' % tarpath)
 
@@ -162,3 +167,5 @@ def uncompress(tarpath, dest):
             fpath = os.path.join(dirpath, fname)
             if not os.path.islink(fpath):
                 os.chmod(fpath, 0o644)
+
+    return nature
