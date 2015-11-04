@@ -10,6 +10,8 @@
 from swh.loader.tar import db
 from swh.core import hashutil
 
+from swh.storage.api.client import RemoteStorage as Storage
+
 
 def escape_hash(sha1):
     """Escape an hexa sha1 to a ready queryable sha1."""
@@ -20,17 +22,9 @@ def upper_directory_from(db_url, revision_id):
     """Return the directory sha1 the revision with id revision_id points to.
 
     """
-    with db.connect(db_url) as db_conn:
-        res = db.query_fetch(
-                db_conn,
-                ("""select directory
-                    from revision
-                    where id=%s
-                    limit 1
-                """, (escape_hash(revision_id),)))
-
-        for directory in res:
-            return directory[0]
+    revisions = [hashutil.hex_to_hash(revision_id)]
+    for revision in storage.revision_get(revisions):
+        return revision['directory']
 
 
 def list_files_from_directory(directory_id):
@@ -49,8 +43,10 @@ def list_files_from_directory(directory_id):
                    'target': entry[4]}
 
 
+storage = Storage('http://localhost:5000/')  # beware the /
+
 db_url = 'dbname=softwareheritage-dev'
-revision_id = '2b0b7e719e4afbdb1a161da0529bdb2ddc9a2235'
+revision_id = '7c82241cb2a564c79f2930ac9416800bbb2a6d3e'
 
 directory_sha1_bytes = upper_directory_from(db_url, revision_id)
 directory_sha1 = hashutil.hash_to_hex(directory_sha1_bytes)
