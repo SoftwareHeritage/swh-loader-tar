@@ -42,6 +42,11 @@ db_url = 'dbname=softwareheritage-dev'
 revision_id = hashutil.hex_to_hash('7c82241cb2a564c79f2930ac9416800bbb2a6d3e')
 
 directory_sha1_bytes = upper_directory_from(db_url, revision_id)
+print('directory id: %s' % hashutil.hash_to_hex(directory_sha1_bytes))
 
+count = 0
 for entry in list_files_from_directory(directory_sha1_bytes):
+    count += 1
     print(entry['perms'], entry['name'], entry['target'])
+
+print('nb entries: %s' % count)
