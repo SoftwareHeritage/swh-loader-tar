@@ -7,7 +7,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.loader.tar import db
 from swh.core import hashutil
 
 from swh.storage.api.client import RemoteStorage as Storage
@@ -26,22 +25,6 @@ def upper_directory_from(db_url, revision_id):
     """
     for revision in storage.revision_get([revision_id]):
         return revision['directory']
-
-
-def list_files_from_directory2(directory_id_hex):
-    with db.connect(db_url) as db_conn:
-        res = db.query_fetch(
-                db_conn,
-                ("""select dir_id, type, target, convert_from(name, 'utf-8'), perms
-                    from swh_directory_walk(%s);
-                """, (escape_hash(directory_id_hex),)))
-
-        for entry in res:
-            yield {'dir_id': entry[0],
-                   'type': entry[1],
-                   'target': entry[3],
-                   'name': entry[3],
-                   'perms': entry[4]}
 
 
 def list_files_from_directory(directory_id_bytes):
