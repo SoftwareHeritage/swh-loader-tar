@@ -78,24 +78,21 @@ class TarLoader(loader.DirLoader):
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                     dir=extraction_dir)
 
-        # T62:
-        # - create tarball as content in storage
-        # - transit the information to the loader dir
-
         # add checksums in revision
         artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
         artifact['name'] = os.path.basename(tarpath)
-
-        revision['metadata'] = {
-            'original-artifact': [artifact]
-        }
 
         # for edge cases (NotImplemented...)
         result = {'status': False, 'stderr': ''}
 
         try:
             self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
-            tarball.uncompress(tarpath, dir_path)
+            nature = tarball.uncompress(tarpath, dir_path)
+
+            revision['metadata'] = {
+                'original-artifact': [artifact],
+                'archive-type': nature,
+            }
 
             result = super().process(dir_path, origin, revision, release,
                                      occurrences)
