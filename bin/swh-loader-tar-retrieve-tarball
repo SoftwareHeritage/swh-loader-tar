@@ -7,9 +7,9 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.core import hashutil
+import argparse
 
-from swh.storage.api.client import RemoteStorage as Storage
+from swh.core import hashutil, config
 
 
 def escape_hash(sha1):
@@ -19,7 +19,7 @@ def escape_hash(sha1):
     return '\\x%s' % sha1
 
 
-def upper_directory_from(db_url, revision_id):
+def upper_directory_from(revision_id):
     """Return the directory sha1 the revision with id revision_id points to.
 
     """
@@ -27,8 +27,12 @@ def upper_directory_from(db_url, revision_id):
         return revision['directory']
 
 
-def list_files_from_directory(directory_id_bytes):
-    for entry in storage.directory_get(directory_id_bytes, recursive=True):
+def directory_ls(directory_id, recursive=True):
+    """List entries from directory.
+
+    """
+    entries = storage.directory_get(directory_id, recursive=recursive)
+    for entry in entries:
         yield {'dir_id': hashutil.hash_to_hex(entry[0]),
                'type': entry[1],
                'target': hashutil.hash_to_hex(entry[2]),
@@ -36,17 +40,39 @@ def list_files_from_directory(directory_id_bytes):
                'perms': entry[4]}
 
 
-storage = Storage('http://localhost:5000/')  # beware the /
+def parse_args():
+    """Parse the configuration from the cli.
 
-db_url = 'dbname=softwareheritage-dev'
-revision_id = hashutil.hex_to_hash('7c82241cb2a564c79f2930ac9416800bbb2a6d3e')
+    """
+    cli = argparse.ArgumentParser(
+        description='Tarball creation from swh-storage.')
+    cli.add_argument('--config-file', '-c', help='configuration file')
 
-directory_sha1_bytes = upper_directory_from(db_url, revision_id)
-print('directory id: %s' % hashutil.hash_to_hex(directory_sha1_bytes))
+    args = cli.parse_args()
 
-count = 0
-for entry in list_files_from_directory(directory_sha1_bytes):
-    count += 1
-    print(entry['perms'], entry['name'], entry['target'])
+    return args
 
-print('nb entries: %s' % count)
+
+if __name__ == '__main__':
+    args = parse_args()
+    conf = config.read(args.config_file)
+
+    if conf['storage_class'] == 'remote_storage':
+        from swh.storage.api.client import RemoteStorage as Storage
+    else:
+        from swh.storage import Storage
+
+    storage = Storage(conf['storage_args'])
+
+    revision_id = hashutil.hex_to_hash(
+        '7c82241cb2a564c79f2930ac9416800bbb2a6d3e')
+
+    directory_id = upper_directory_from(revision_id)
+    print('directory id: %s' % hashutil.hash_to_hex(directory_id))
+
+    count = 0
+    for entry in directory_ls(directory_id, True):
+        count += 1
+        print(entry['perms'], entry['name'], entry['target'])
+
+    print('nb entries: %s' % count)
