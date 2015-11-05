@@ -88,10 +88,10 @@ class TarLoader(loader.DirLoader):
         try:
             self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
             nature = tarball.uncompress(tarpath, dir_path)
+            artifact['archive-type'] = nature
 
             revision['metadata'] = {
                 'original-artifact': [artifact],
-                'archive-type': nature,
             }
 
             result = super().process(dir_path, origin, revision, release,
