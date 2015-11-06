@@ -31,8 +31,9 @@ def get_revision(revision_id):
     for revision in storage.revision_get([revision_id]):
         if 'metadata' in revision:
             meta = revision['metadata']
-            name = meta['original_artifact'][0]['name']
-            revision['tarball_name'] = name
+            artifact = meta['original_artifact'][0]
+            revision['archive_name'] = artifact['name']
+            revision['archive_type'] = artifact['archive_type']
 
         return revision
 
@@ -57,10 +58,13 @@ def directory_ls_with_content(directory_id, recursive=True):
             yield entry
 
 
-def build_archive_from_revision(revision_id, archive_type, directory_dest='.'):
+def build_archive_from_revision(revision_id,
+                                archive_type=None,
+                                directory_dest='.'):
     revision = get_revision(revision_id)
     directory_id = revision['directory']
-    tarpath = os.path.join(directory_dest, revision['tarball_name'])
+    tarpath = os.path.join(directory_dest, revision['archive_name'])
+    archive_type = archive_type or revision['archive_type']
 
     print('directory id: %s' % hashutil.hash_to_hex(directory_id))
 
@@ -115,7 +119,6 @@ def parse_args():
         description='Tarball creation from swh-storage.')
     cli.add_argument('--config-file', '-c', help='configuration file')
     cli.add_argument('--type-archive', '-t',
-                     default='tar',
                      help='archive type (zip or tar)')
     cli.add_argument('--directory', '-d',
                      help='configuration file path')
@@ -153,7 +156,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     conf = config.read(args.config_file)
-    type_archive = args.type_archive
+    type_archive = args.type_archive or None
     directory_dest = args.directory or '.'
     revision_hex = args.revision
 
