@@ -61,6 +61,10 @@ def directory_ls_with_content(directory_id, recursive=True):
 def build_archive_from_revision(revision_id,
                                 archive_type=None,
                                 directory_dest='.'):
+    def mkdir(path):
+        os.makedirs(path, exist_ok=True)
+        os.chmod(path, 0o755)
+
     revision = get_revision(revision_id)
     directory_id = revision['directory']
     tarpath = os.path.join(directory_dest, revision['archive_name'])
@@ -80,21 +84,20 @@ def build_archive_from_revision(revision_id,
         path = os.path.join(tmpdir, name)
 
         if perms == 40000:  # dir
-            os.makedirs(path, exist_ok=True)
-            os.chmod(path, 0o755)
-        elif perms == 100644:  # file
+            mkdir(path)
+        else:
             dirpath = os.path.dirname(path)
-            os.makedirs(dirpath, exist_ok=True)
-            os.chmod(dirpath, 0o755)
+            mkdir(dirpath)
 
-            file_content = entry['data']
-            with open(path, 'wb') as f:
-                f.write(file_content)
+            if perms == 100644:  # file
+                file_content = entry['data']
+                with open(path, 'wb') as f:
+                    f.write(file_content)
 
-            os.chmod(path, 0o644)
-        else:  # symlink
-            linkdest = entry['data']
-            os.symlink(path, linkdest)
+                os.chmod(path, 0o644)
+            else:  # symlink
+                linkdest = entry['data']
+                os.symlink(path, linkdest)
 
     # build archive from the tree
     tarball.compress(tarpath, tmpdir, archive_type)
