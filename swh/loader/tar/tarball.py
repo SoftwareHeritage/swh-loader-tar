@@ -206,8 +206,6 @@ def compress(tarpath, dirpath, nature):
     The tarball being dumped at tarpath.
     The nature of the tarball is determined by the nature argument.
 
-
-
     """
     if nature == 'zip':
         _compress_zip(tarpath, dirpath)
