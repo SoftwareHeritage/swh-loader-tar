@@ -180,9 +180,14 @@ def ls(rootdir):
 
 
 def _compress_zip(tarpath, dirpath):
-    with zipfile.ZipFile(tarpath, 'w') as z:
-        for path in ls(dirpath):
-            z.write(path)
+    """Compress dirpath's content as tarpath.
+
+    """
+    # problem with reading the outputed zip
+    raise NotImplemented('Not yet implemented')
+    # with zipfile.ZipFile(tarpath, 'w') as z:
+    #     for path in ls(dirpath):
+    #         z.write(path)
 
 
 def _compress_tar(tarpath, dirpath):
