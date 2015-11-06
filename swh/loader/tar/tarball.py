@@ -176,8 +176,8 @@ def ls(rootdir):
     """Generator of filepath, filename from rootdir.
 
     """
-    for dirpath, _, fnames in os.walk(rootdir):
-        for fname in fnames:
+    for dirpath, dirnames, fnames in os.walk(rootdir):
+        for fname in (dirnames+fnames):
             fpath = os.path.join(dirpath, fname)
             fname = utils.commonname(rootdir, fpath)
             yield fpath, fname
@@ -198,7 +198,7 @@ def _compress_tar(tarpath, dirpath):
     """
     with tarfile.open(tarpath, 'w:bz2') as t:
         for fpath, fname in ls(dirpath):
-            t.add(fpath, arcname=fname)
+            t.add(fpath, arcname=fname, recursive=False)
 
 
 def compress(tarpath, dirpath, nature):
