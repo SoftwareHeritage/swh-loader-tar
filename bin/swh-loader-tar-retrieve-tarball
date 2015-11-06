@@ -66,14 +66,13 @@ def build_archive_from_revision(revision_id,
     tarpath = os.path.join(directory_dest, revision['archive_name'])
     archive_type = archive_type or revision['archive_type']
 
-    print('directory id: %s' % hashutil.hash_to_hex(directory_id))
+    print("Compressing archive as '%s' with type %s" % (tarpath, archive_type))
 
     # build fs structure
     tmpdir = tempfile.mkdtemp(suffix='create-tarball',
                               prefix='swh.loader.tar',
                               dir='/tmp')
 
-    count = 0
     for entry in directory_ls_with_content(directory_id, recursive=True):
         name = entry['name']
         perms = entry['perms']
@@ -97,18 +96,11 @@ def build_archive_from_revision(revision_id,
             linkdest = entry['data']
             os.symlink(path, linkdest)
 
-        count += 1
-
-    print('%s entries' % count)
-
     # build archive from the tree
-    print('Compressing archive %s ' % tarpath)
     tarball.compress(tarpath, tmpdir, archive_type)
 
     # clean up tmp directory
     shutil.rmtree(tmpdir)
-
-    return tarpath
 
 
 def parse_args():
