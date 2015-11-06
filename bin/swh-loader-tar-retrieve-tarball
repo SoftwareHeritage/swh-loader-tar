@@ -39,17 +39,13 @@ def get_revision(revision_id):
         return revision
 
 
-def directory_ls_with_content(directory_id, recursive=True):
-    """List directories with their data when content targeted is a file.
-
-    """
-    all_contents = storage.directory_get(directory_id, recursive=recursive)
-    ls_dirs, ls_contents = itertools.tee(all_contents)
-
+def _directory_ls_dir(ls_dirs):
     for entry in (e for e in ls_dirs if e['type'] == 'dir'):
         entry['name'] = entry['name'].decode('utf-8')
         yield entry
 
+
+def _directory_ls_contents(ls_contents):
     for entry in (e for e in ls_contents if e['type'] != 'dir'):
         entry['name'] = entry['name'].decode('utf-8')
         sha1 = entry['sha1']
@@ -61,6 +57,17 @@ def directory_ls_with_content(directory_id, recursive=True):
         entry['data'] = contents_data[0]['data']
 
         yield entry
+
+
+def directory_ls_with_content(directory_id, recursive=True):
+    """List directories with their data when content targeted is a file.
+
+    """
+    all_contents = storage.directory_get(directory_id, recursive=recursive)
+    ls_dirs, ls_contents = itertools.tee(all_contents)
+
+    yield from itertools.chain(_directory_ls_dir(ls_dirs),
+                               _directory_ls_contents(ls_contents))
 
 
 def build_archive_from_revision(revision_id,
