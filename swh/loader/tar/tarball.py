@@ -8,6 +8,7 @@ import tarfile
 import zipfile
 
 from os.path import abspath, realpath, join, dirname
+from swh.loader.tar import utils
 
 
 def canonical_abspath(path):
@@ -172,11 +173,14 @@ def uncompress(tarpath, dest):
 
 
 def ls(rootdir):
-    """List files from rootdir."""
+    """Generator of filepath, filename from rootdir.
+
+    """
     for dirpath, _, fnames in os.walk(rootdir):
         for fname in fnames:
             fpath = os.path.join(dirpath, fname)
-            yield fpath
+            fname = utils.commonname(rootdir, fpath)
+            yield fpath, fname
 
 
 def _compress_zip(tarpath, dirpath):
@@ -191,13 +195,20 @@ def _compress_zip(tarpath, dirpath):
 
 
 def _compress_tar(tarpath, dirpath):
+    """Compress dirpath's content as tarpath.
+
+    """
     with tarfile.open(tarpath, 'w:bz2') as t:
-        for path in ls(dirpath):
-            t.add(path)
+        for fpath, fname in ls(dirpath):
+            t.add(fpath, arcname=fname)
 
 
 def compress(tarpath, dirpath, nature):
-    """Compress a directory to a tarball of type nature.
+    """Compress the directory dirpath's content to a tarball.
+    The tarball being dumped at tarpath.
+    The nature of the tarball is determined by the nature argument.
+
+
 
     """
     if nature == 'zip':
