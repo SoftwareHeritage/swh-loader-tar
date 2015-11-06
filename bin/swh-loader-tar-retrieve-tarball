@@ -93,7 +93,6 @@ def build_archive_from_revision(revision_id, archive_type, directory_dest='.'):
             linkdest = entry['data']
             os.symlink(path, linkdest)
 
-        print(perms, path)
         count += 1
 
     print('%s entries' % count)
