@@ -169,3 +169,35 @@ def uncompress(tarpath, dest):
                 os.chmod(fpath, 0o644)
 
     return nature
+
+
+def ls(rootdir):
+    """List files from rootdir."""
+    for dirpath, _, fnames in os.walk(rootdir):
+        for fname in fnames:
+            fpath = os.path.join(dirpath, fname)
+            yield fpath
+
+
+def _compress_zip(tarpath, dirpath):
+    with zipfile.ZipFile(tarpath, 'w') as z:
+        for path in ls(dirpath):
+            z.write(path)
+
+
+def _compress_tar(tarpath, dirpath):
+    with tarfile.open(tarpath, 'w:bz2') as t:
+        for path in ls(dirpath):
+            t.add(path)
+
+
+def compress(tarpath, dirpath, nature):
+    """Compress a directory to a tarball of type nature.
+
+    """
+    if nature == 'zip':
+        _compress_zip(tarpath, dirpath)
+    else:
+        _compress_tar(tarpath, dirpath)
+
+    return tarpath

@@ -10,9 +10,11 @@
 import argparse
 import os
 import shutil
+import sys
 import tempfile
 
 from swh.core import hashutil, config
+from swh.loader.tar import tarball
 
 
 def escape_hash(sha1):
@@ -30,57 +32,72 @@ def upper_directory_from(revision_id):
         return revision['directory']
 
 
-def directory_ls(directory_id, recursive=True):
-    """List entries from directory.
+def directory_ls_with_content(directory_id, recursive=True):
+    """List directories with their data when content targeted is a file.
 
     """
-    entries = storage.directory_get(directory_id, recursive=recursive)
-    for entry in entries:
-        yield {'dir_id': hashutil.hash_to_hex(entry[0]),
-               'type': entry[1],
-               'target': hashutil.hash_to_hex(entry[2]),
-               'name': entry[3].decode('utf-8'),
-               'perms': entry[4]}
+    for entry in storage.directory_get(directory_id, recursive=recursive):
+        entry['name'] = entry['name'].decode('utf-8')
+        if entry['type'] == 'dir':
+            yield entry
+        else:
+            sha1 = entry['sha1']
+            status = entry['status']
+
+            # HACK: heavy, 1 post per content, need to batch
+            contents_data = list(storage.content_get(
+                [{'sha1': sha1, 'status': status}]))
+            entry['data'] = contents_data[0]['data']
+
+            yield entry
 
 
-def build_archive_from_revision(revision_id):
+def build_archive_from_revision(archive_type, tarpath, revision_id):
     directory_id = upper_directory_from(revision_id)
     print('directory id: %s' % hashutil.hash_to_hex(directory_id))
 
+    # build fs structure
     tmpdir = tempfile.mkdtemp(suffix='create-tarball',
                               prefix='swh.loader.tar',
                               dir='/tmp')
 
     count = 0
-    tarball_name = ''
-    for entry in directory_ls(directory_id, recursive=True):
+    for entry in directory_ls_with_content(directory_id, recursive=True):
         name = entry['name']
         perms = entry['perms']
 
         path = os.path.join(tmpdir, name)
-        if count == 0:
-            tarball_name = path  # order in the query
 
-        if perms == 40000:
+        if perms == 40000:  # dir
             os.makedirs(path, exist_ok=True)
             os.chmod(path, 0o755)
-        elif perms == 100644:
+        elif perms == 100644:  # file
             dirpath = os.path.dirname(path)
             os.makedirs(dirpath, exist_ok=True)
             os.chmod(dirpath, 0o755)
 
-            open(path, 'w')  # FIXME: add content to it...
+            file_content = entry['data']
+            with open(path, 'wb') as f:
+                f.write(file_content)
+
             os.chmod(path, 0o644)
-        else:
-            print('skip link for the moment...')  # FIXME: need content
-            continue
+        else:  # symlink
+            linkdest = entry['data']
+            os.symlink(path, linkdest)
 
         print(perms, path)
         count += 1
 
-    print('tarball %s: %s entries' % (tarball_name, count))
+    print('%s entries' % count)
 
+    # build archive from the tree
+    print('Compressing archive %s ' % tarpath)
+    tarball.compress(tarpath, tmpdir, archive_type)
+
+    # clean up tmp directory
     shutil.rmtree(tmpdir)
+
+    return tarpath
 
 
 def parse_args():
@@ -90,15 +107,51 @@ def parse_args():
     cli = argparse.ArgumentParser(
         description='Tarball creation from swh-storage.')
     cli.add_argument('--config-file', '-c', help='configuration file')
+    cli.add_argument('--type-archive', '-t',
+                     default='tar',
+                     help='archive type (zip or tar)')
+    cli.add_argument('--file-path', '-f',
+                     help='configuration file path')
+    cli.add_argument('--revision', '-r',
+                     help='revision checksum')
 
     args = cli.parse_args()
 
     return args
 
 
+def check_args(args):
+    """Check cli args and returns the error msg.
+
+    Returns:
+        List of error messages as string if some.
+
+    """
+    errorMsgs = []
+    if not args.config_file:
+        errorMsgs.append('\n- Configuration file option.')
+
+    if not args.file_path:
+        errorMsgs.append('\n- File path to archive')
+
+    if not args.revision:
+        errorMsgs.append('\n- Revision checksum')
+
+    return errorMsgs
+
+
 if __name__ == '__main__':
     args = parse_args()
+
+    errorMsgs = check_args(args)
+    if errorMsgs:
+        print('Some mandatory options are missing: %s' % ''.join(errorMsgs))
+        sys.exit(1)
+
     conf = config.read(args.config_file)
+    type_archive = args.type_archive
+    tarpath = args.file_path
+    revision_hex = args.revision
 
     if conf['storage_class'] == 'remote_storage':
         from swh.storage.api.client import RemoteStorage as Storage
@@ -107,6 +160,5 @@ if __name__ == '__main__':
 
     storage = Storage(conf['storage_args'])
 
-    revision_id = hashutil.hex_to_hash(
-        '7c82241cb2a564c79f2930ac9416800bbb2a6d3e')
-    build_archive_from_revision(revision_id)
+    revision_id = hashutil.hex_to_hash(revision_hex)
+    build_archive_from_revision(type_archive, tarpath, revision_id)
