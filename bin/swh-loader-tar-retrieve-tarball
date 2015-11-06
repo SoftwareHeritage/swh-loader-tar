@@ -24,12 +24,17 @@ def escape_hash(sha1):
     return '\\x%s' % sha1
 
 
-def upper_directory_from(revision_id):
+def get_revision(revision_id):
     """Return the directory sha1 the revision with id revision_id points to.
 
     """
     for revision in storage.revision_get([revision_id]):
-        return revision['directory']
+        if 'metadata' in revision:
+            meta = revision['metadata']
+            name = meta['original_artifact'][0]['name']
+            revision['tarball_name'] = name
+
+        return revision
 
 
 def directory_ls_with_content(directory_id, recursive=True):
@@ -52,8 +57,11 @@ def directory_ls_with_content(directory_id, recursive=True):
             yield entry
 
 
-def build_archive_from_revision(archive_type, tarpath, revision_id):
-    directory_id = upper_directory_from(revision_id)
+def build_archive_from_revision(revision_id, archive_type, directory_dest='.'):
+    revision = get_revision(revision_id)
+    directory_id = revision['directory']
+    tarpath = os.path.join(directory_dest, revision['tarball_name'])
+
     print('directory id: %s' % hashutil.hash_to_hex(directory_id))
 
     # build fs structure
@@ -110,7 +118,7 @@ def parse_args():
     cli.add_argument('--type-archive', '-t',
                      default='tar',
                      help='archive type (zip or tar)')
-    cli.add_argument('--file-path', '-f',
+    cli.add_argument('--directory', '-d',
                      help='configuration file path')
     cli.add_argument('--revision', '-r',
                      help='revision checksum')
@@ -131,9 +139,6 @@ def check_args(args):
     if not args.config_file:
         errorMsgs.append('\n- Configuration file option.')
 
-    if not args.file_path:
-        errorMsgs.append('\n- File path to archive')
-
     if not args.revision:
         errorMsgs.append('\n- Revision checksum')
 
@@ -150,7 +155,7 @@ if __name__ == '__main__':
 
     conf = config.read(args.config_file)
     type_archive = args.type_archive
-    tarpath = args.file_path
+    directory_dest = args.directory or '.'
     revision_hex = args.revision
 
     if conf['storage_class'] == 'remote_storage':
@@ -161,4 +166,4 @@ if __name__ == '__main__':
     storage = Storage(conf['storage_args'])
 
     revision_id = hashutil.hex_to_hash(revision_hex)
-    build_archive_from_revision(type_archive, tarpath, revision_id)
+    build_archive_from_revision(revision_id, type_archive, directory_dest)
