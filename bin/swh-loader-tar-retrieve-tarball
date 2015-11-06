@@ -54,9 +54,11 @@ def _directory_ls_contents(ls_contents):
         content_by_sha = collections.defaultdict(list)
 
         # iter over contents (beware the last block can contain empty ones)
-        for content in (c for c in block_contents if c):
-            full_contents.append({'sha1': content['sha1'],
-                                  'status': content['status']})
+        for content in block_contents:
+            if not content or content['status'] != 'visible':
+                continue
+
+            full_contents.append(content['sha1'])
             content_by_sha[content['sha1']].append(content)
 
         for c in storage.content_get(full_contents):
