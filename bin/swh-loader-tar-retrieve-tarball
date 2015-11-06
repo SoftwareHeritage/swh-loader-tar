@@ -8,6 +8,7 @@
 # See top-level LICENSE file for more information
 
 import argparse
+import itertools
 import os
 import shutil
 import sys
@@ -42,20 +43,24 @@ def directory_ls_with_content(directory_id, recursive=True):
     """List directories with their data when content targeted is a file.
 
     """
-    for entry in storage.directory_get(directory_id, recursive=recursive):
+    all_contents = storage.directory_get(directory_id, recursive=recursive)
+    ls_dirs, ls_contents = itertools.tee(all_contents)
+
+    for entry in (e for e in ls_dirs if e['type'] == 'dir'):
         entry['name'] = entry['name'].decode('utf-8')
-        if entry['type'] == 'dir':
-            yield entry
-        else:
-            sha1 = entry['sha1']
-            status = entry['status']
+        yield entry
 
-            # HACK: heavy, 1 post per content, need to batch
-            contents_data = list(storage.content_get(
-                [{'sha1': sha1, 'status': status}]))
-            entry['data'] = contents_data[0]['data']
+    for entry in (e for e in ls_contents if e['type'] != 'dir'):
+        entry['name'] = entry['name'].decode('utf-8')
+        sha1 = entry['sha1']
+        status = entry['status']
 
-            yield entry
+        # HACK: heavy, 1 post per content, need to batch
+        contents_data = list(storage.content_get(
+            [{'sha1': sha1, 'status': status}]))
+        entry['data'] = contents_data[0]['data']
+
+        yield entry
 
 
 def build_archive_from_revision(revision_id,
