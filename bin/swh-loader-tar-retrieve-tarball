@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-# NOT FOR PRODUCTION (does not use the stable swh storage api yet)
+# NOT FOR PRODUCTION
+# - use swh storage api
+# - does not deal with missing contents yet so the tarball could be uncomplete
 
 # Copyright (C) 2015  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
