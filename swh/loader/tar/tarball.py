@@ -8,6 +8,7 @@ import tarfile
 import zipfile
 
 from os.path import abspath, realpath, join, dirname
+from swh.loader.tar import utils
 
 
 def canonical_abspath(path):
@@ -169,3 +170,55 @@ def uncompress(tarpath, dest):
                 os.chmod(fpath, 0o644)
 
     return nature
+
+
+def ls(rootdir):
+    """Generator of filepath, filename from rootdir.
+
+    """
+    for dirpath, dirnames, fnames in os.walk(rootdir):
+        for fname in (dirnames+fnames):
+            fpath = os.path.join(dirpath, fname)
+            fname = utils.commonname(rootdir, fpath)
+            yield fpath, fname
+
+
+def _compress_zip(tarpath, files):
+    """Compress dirpath's content as tarpath.
+
+    """
+    with zipfile.ZipFile(tarpath, 'w') as z:
+        for fpath, fname in files:
+            z.write(fpath, arcname=fname)
+
+
+def _compress_tar(tarpath, files):
+    """Compress dirpath's content as tarpath.
+
+    """
+    with tarfile.open(tarpath, 'w:bz2') as t:
+        for fpath, fname in files:
+            t.add(fpath, arcname=fname, recursive=False)
+
+
+def compress(tarpath, nature, dirpath_or_files):
+    """Create a tarball tarpath with nature nature.
+    The content of the tarball is either dirpath's content (if representing
+    a directory path) or dirpath's iterable contents.
+
+    Compress the directory dirpath's content to a tarball.
+    The tarball being dumped at tarpath.
+    The nature of the tarball is determined by the nature argument.
+
+    """
+    if isinstance(dirpath_or_files, str):
+        files = ls(dirpath_or_files)
+    else:  # iterable of 'filepath, filename'
+        files = dirpath_or_files
+
+    if nature == 'zip':
+        _compress_zip(tarpath, files)
+    else:
+        _compress_tar(tarpath, files)
+
+    return tarpath
