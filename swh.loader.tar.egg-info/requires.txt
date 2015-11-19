@@ -1,4 +1,5 @@
 retrying
 swh.core>=0.0.14
 swh.loader.dir>=0.0.12
+swh.storage>=0.0.18
 vcversioner
