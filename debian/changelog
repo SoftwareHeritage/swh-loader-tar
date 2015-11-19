@@ -1,3 +1,10 @@
+swh-loader-tar (0.0.13-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.13
+  * Add a binary to build a tarball from storage
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 19 Nov 2015 11:27:31 +0100
+
 swh-loader-tar (0.0.12-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.12
