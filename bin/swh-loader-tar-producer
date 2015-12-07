@@ -70,15 +70,15 @@ def produce_archive_messages_from(app, conf, path,
 
     """
 
-    LIMIT = conf['limit']
-    BLOCK = int(conf['block_messages'])
+    limit = conf['limit']
+    block = int(conf['block_messages'])
     count = 0
 
     path_source_tarballs = mirror_file if mirror_file else path
 
     for tarpath, fname in file.random_archives_from(path_source_tarballs,
-                                                    BLOCK,
-                                                    LIMIT):
+                                                    block,
+                                                    limit):
         try:
             compute_message_from(app, conf, path, tarpath, fname, dry_run)
             count += 1
