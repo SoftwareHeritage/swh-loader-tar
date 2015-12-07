@@ -156,14 +156,14 @@ def check_args(args):
         List of error messages as string if some.
 
     """
-    errorMsgs = []
+    errors = []
     if not args.config_file:
-        errorMsgs.append('\n- Configuration file option.')
+        errors.append('\n- Configuration file option.')
 
     if not args.revision:
-        errorMsgs.append('\n- Revision checksum')
+        errors.append('\n- Revision checksum')
 
-    return errorMsgs
+    return errors
 
 
 if __name__ == '__main__':
