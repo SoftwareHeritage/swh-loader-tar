@@ -1,8 +1,9 @@
-swh-loader-tar (0.0.13-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.14-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * Prepare swh.loader.tar release 0.0.14
+  * Update for new swh.storage
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 19 Nov 2015 11:27:32 +0100
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Mon, 07 Dec 2015 18:53:00 +0100
 
 swh-loader-tar (0.0.13-1~swh1) unstable-swh; urgency=medium
 

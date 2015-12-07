@@ -12,7 +12,10 @@ from swh.loader.tar import utils
 
 class TestUtils(unittest.TestCase):
     @classmethod
-    def setupClass(cls):
+    def setUpClass(cls):
+
+        super().setUpClass()
+
         cls.files = {
             'free-ipmi-1.2.2.tar': ('free-ipmi-', '1.2.2', '.tar'),
             'free-ipmi-1.2.2.tar.gz': ('free-ipmi-', '1.2.2', '.tar.gz'),
