@@ -89,6 +89,7 @@ class TarLoader(loader.DirLoader):
             self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
             nature = tarball.uncompress(tarpath, dir_path)
             artifact['archive_type'] = nature
+            artifact['length'] = os.lstat(tarpath).st_size
 
             revision['metadata'] = {
                 'original_artifact': [artifact],
