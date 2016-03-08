@@ -11,6 +11,8 @@ bin/swh-diff-db-mirror
 bin/swh-loader-tar-producer
 bin/swh-loader-tar-retrieve-tarball
 bin/swh-ls-tarball-size
+bin/swh-update-tarball-size
+bin/test-archive.sh
 debian/changelog
 debian/compat
 debian/control

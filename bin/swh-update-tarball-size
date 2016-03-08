@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2015  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
+import argparse
+import os
+import psycopg2
+
+from contextlib import contextmanager
+
+from swh.core import hashutil
+from swh.loader.tar import utils
+
+
+def entry_to_bytes(entry):
+    """Convert an entry coming from the database to bytes"""
+    if isinstance(entry, memoryview):
+        return entry.tobytes()
+    if isinstance(entry, list):
+        return [entry_to_bytes(value) for value in entry]
+    return entry
+
+
+def line_to_bytes(line):
+    """Convert a line coming from the database to bytes"""
+    return line.__class__(entry_to_bytes(entry) for entry in line)
+
+
+def cursor_to_bytes(cursor):
+    """Yield all the data from a cursor as bytes"""
+    yield from (line_to_bytes(line) for line in cursor)
+
+
+class Db:
+    """Proxy to the SWH DB, with wrappers around stored procedures
+
+    """
+
+    @classmethod
+    def connect(cls, *args, **kwargs):
+        """factory method to create a DB proxy
+
+        Accepts all arguments of psycopg2.connect; only some specific
+        possibilities are reported below.
+
+        Args:
+            connstring: libpq2 connection string
+
+        """
+        conn = psycopg2.connect(*args, **kwargs)
+        return cls(conn)
+
+    def _cursor(self, cur_arg):
+        """get a cursor: from cur_arg if given, or a fresh one otherwise
+
+        meant to avoid boilerplate if/then/else in methods that proxy stored
+        procedures
+
+        """
+        if cur_arg is not None:
+            return cur_arg
+        # elif self.cur is not None:
+        #     return self.cur
+        else:
+            return self.conn.cursor()
+
+    def __init__(self, conn):
+        """create a DB proxy
+
+        Args:
+            conn: psycopg2 connection to the SWH DB
+
+        """
+        self.conn = conn
+
+    @contextmanager
+    def transaction(self):
+        """context manager to execute within a DB transaction
+
+        Yields:
+            a psycopg2 cursor
+
+        """
+        with self.conn.cursor() as cur:
+            try:
+                yield cur
+                self.conn.commit()
+            except:
+                if not self.conn.closed:
+                    self.conn.rollback()
+                raise
+
+    def read_archives(self, cur=None):
+        cur = self._cursor(cur)
+        q = """select target, o.url, r.metadata#>>'{original_artifact,0,name}',
+                      r.metadata#>>'{original_artifact,0,archive_type}',
+                      r.metadata#>>'{original_artifact,0,sha1}',
+                      r.metadata#>>'{original_artifact,0,sha256}',
+                      r.metadata#>>'{original_artifact,0,sha1_git}'
+               from occurrence_history occ
+               inner join origin o on o.id=occ.origin
+               inner join revision r on occ.target = r.id
+               where target_type='revision'
+               and o.url like 'rsync://%gnu%'
+               and r.metadata#>>'{original_artifact,0,length}' is null
+               and r.metadata#>>'{original_artifact,0,archive_type}' is
+                  not null;
+            """
+        cur.execute(q)
+        for entry in cursor_to_bytes(cur):
+            url = entry[1]
+            name = entry[2]
+            path = os.path.join(url.replace('rsync://ftp.gnu.org/', ''), name)
+            yield {
+                'revision_id': hashutil.hash_to_hex(entry[0]),
+                'name': name,
+                'path': path,
+                'sha1': entry[3],
+                'sha256': entry[4],
+                'sha1_git': entry[5],
+            }
+
+
+def parse_args():
+    """Parse the configuration from the cli.
+
+    """
+    cli = argparse.ArgumentParser(
+        description='Tarball listing tarballs size.')
+    cli.add_argument('--mirror-root-dir', '-m', help='path to the root dir.')
+    cli.add_argument('--db-url', '-u', default=None, help='path to root dir.')
+    cli.add_argument('--dry-run', action='store_true', help='dry run.')
+
+    args = cli.parse_args()
+
+    return args
+
+
+def read_revisions_per_tarname_from_db(root_dir, db_url):
+    db = Db.connect(db_url)
+    with db.transaction() as cur:
+        for data in db.read_archives(cur):
+            revision_id = data['revision_id']
+            path = os.path.join(root_dir, data['path'])
+
+            yield {
+                'path': path,
+                'revision_id': revision_id,
+                'sha1': data['sha1'],
+                'sha256': data['sha256'],
+                'sha1_git': data['sha1_git'],
+            }
+
+if __name__ == '__main__':
+    args = parse_args()
+    root_dir = args.mirror_root_dir
+    if root_dir.endswith('/'):
+        root_dir = root_dir.rstrip('/')
+
+    dry_run = args.dry_run
+    db_url = args.db_url
+    revisions = read_revisions_per_tarname_from_db(root_dir, db_url)
+
+    db = Db.connect(db_url)
+    with db.transaction() as cur:
+        # scan folder
+        count = 0
+        for data in revisions:
+            tarpath = data['path']
+            if not os.path.exists(tarpath):
+                print('%s skipped' % tarpath)
+                continue
+
+            length = os.path.getsize(tarpath)
+            name = os.path.basename(tarpath)
+
+            checksums = utils.convert_to_hex(hashutil.hashfile(tarpath))
+            revid = data['revision_id']
+
+            if not revid:
+                print('%s %s %s' % (name, tarpath, checksums))
+                continue
+
+            count += 1
+
+            print('revision %s tarpath %s' % (
+                revid, tarpath))
+
+            if dry_run:
+                continue
+
+            query = """
+                update revision
+                set metadata = jsonb_set(metadata,
+                                         '{original_artifact,0,length}', '%s')
+                where id='\\x%s' and
+                      metadata#>>'{original_artifact,0,sha1}' = '%s' and
+                      metadata#>>'{original_artifact,0,sha256}' = '%s' and
+                      metadata#>>'{original_artifact,0,sha1_git}' = '%s' and
+                      metadata#>>'{original_artifact,0,name}' = '%s'""" % (
+                          length, revid, checksums['sha1'],
+                          checksums['sha256'], checksums['sha1_git'], name)
+            cur.execute(query)
+
+    print('%s updates' % count)

@@ -13,7 +13,7 @@ from swh.loader.tar import build, file
 
 
 def compute_message_from(app, conf, root_dir, tarpath, filename,
-                         dry_run=False):
+                         date, dry_run=False):
     """Compute and post the message to worker for the archive tarpath.
 
     Args:
@@ -21,6 +21,7 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
         conf: dictionary holding static metadata
         root_dir: root directory
         tarball: the archive's representation
+        retrieval_date: retrieval date of information
         dry_run: will compute but not send messages
 
     Returns:
@@ -35,8 +36,7 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
                                   root_dir,
                                   tarpath)
     revision = build.compute_revision(tarpath)
-    occurrences = [build.occurrence_with_mtime(GNU_AUTHORITY, tarpath),
-                   build.occurrence_with_ctime(SWH_AUTHORITY, tarpath)]
+    occurrence = build.occurrence_with_date(retrieval_date, tarpath)
     release = build.compute_release(filename, tarpath)
 
     if not dry_run:
@@ -44,10 +44,11 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
                                                                   origin,
                                                                   revision,
                                                                   release,
-                                                                  occurrences)
+                                                                  [occurrence])
 
 
 def produce_archive_messages_from(app, conf, path,
+                                  retrieval_date,
                                   mirror_file=None,
                                   dry_run=False):
     """From path, produce archive tarball messages to celery.
@@ -59,6 +60,7 @@ def produce_archive_messages_from(app, conf, path,
         app: instance of the celery app
         conf: dictionary holding static metadata
         path: top directory to list archives from.
+        retrieval_date: retrieval date of information
         mirror_file: a filtering file of tarballs to load
         dry_run: will compute but not send messages
 
@@ -80,7 +82,8 @@ def produce_archive_messages_from(app, conf, path,
                                                     block,
                                                     limit):
         try:
-            compute_message_from(app, conf, path, tarpath, fname, dry_run)
+            compute_message_from(app, conf, path, tarpath, fname,
+                                 retrieval_date, dry_run)
             count += 1
         except ValueError:
             print('Problem with the following archive: %s' % tarpath)
@@ -155,19 +158,18 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # instantiate celery app with its configuration
-    from swh.core.worker import app
+    from swh.scheduler.celery_backend.config import app
     from swh.loader.tar import tasks  # noqa
 
     conf = load_config(config_file)
 
-    # state...
-    SWH_AUTHORITY = conf['swh_authority']
-    GNU_AUTHORITY = conf['gnu_authority']
+    retrieval_date = conf['date']
 
     nb_tarballs = produce_archive_messages_from(
         app,
         conf,
         conf['mirror_root_directory'],
+        retrieval_date,
         conf.get('mirror_subset_archives'),
         args.dry_run)
 
