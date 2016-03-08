@@ -8,12 +8,12 @@
 import argparse
 import os
 import psycopg2
-import sys
 
 from contextlib import contextmanager
 
 from swh.core import hashutil
 from swh.loader.tar import file, utils
+
 
 def entry_to_bytes(entry):
     """Convert an entry coming from the database to bytes"""
@@ -87,7 +87,8 @@ class Db:
         with self.conn.cursor() as cur:
             try:
                 yield cur
-                self.conn.commit()
+                # self.conn.commit()
+                self.conn.rollback()  # hack for test
             except:
                 if not self.conn.closed:
                     self.conn.rollback()
@@ -95,7 +96,15 @@ class Db:
 
     def read_archives(self, cur=None):
         cur = self._cursor(cur)
-        q = "select id, metadata#>>'{original_artifact,0,name}' as name from revision where metadata#>>'{original_artifact,0,archive_type}' is not null"
+        q = """select id,
+                      metadata#>>'{original_artifact,0,name}' as name,
+                      metadata#>>'{original_artifact,0,sha1}' as sha1,
+                      metadata#>>'{original_artifact,0,sha256}' as sha256,
+                      metadata#>>'{original_artifact,0,sha1_git}' as sha1_git
+               from revision
+               where metadata is not null and
+                     metadata#>>'{original_artifact,0,archive_type}' is
+                     not null"""
         cur.execute(q)
         yield from cursor_to_bytes(cur)
 
@@ -107,37 +116,99 @@ def parse_args():
     cli = argparse.ArgumentParser(
         description='Tarball listing tarballs size.')
     cli.add_argument('--mirror-root-dir', '-m', help='path to the root dir.')
+    cli.add_argument('--db-url', '-d', default=None, help='path to root dir.')
 
     args = cli.parse_args()
 
     return args
 
 
+def read_revisions_per_tarname_from_db(db_url):
+    revisions = {}
+    # line model:
+    # dd7c4dd9edb4bbd06b6df503f10d113ab54beff5 "autoconf.texi.tar.gz" "tar"
+    db = Db.connect(db_url)
+    with db.transaction() as cur:
+        for data in db.read_archives(cur):
+            revision_id = hashutil.hash_to_hex(data[0])
+            tarname = data[1]
+            checksums_key = data[2]+data[3]+data[4]  # sha1+sha256+sha1_git
+            revid = revisions.get(tarname, {}).get(checksums_key, None)
+            if revid == revision_id:
+                print('%s already there with key %s...'
+                      % (tarname, checksums_key))
+                continue
+            revisions[tarname] = {checksums_key: revision_id}
+
+    return revisions
+
+
+# def read_revisions_per_tarname_from_stdin():
+#     revisions = {}
+#     # line model:
+#     # dd7c4dd9edb4bbd06b6df503f10d113ab54beff5 "autoconf.texi.tar.gz" "tar"
+#     for data in sys.stdin:
+#         data = data.rstrip().split(' ')
+#         revision_id = data[0]
+#         tarname = data[1]
+#         l = revisions.get(tarname, [])
+#         l.append(revision_id)
+#         revisions[tarname] = l
+
+#         actual_revs = revisions.get(tarname)
+#         if actual_revs and len(actual_revs) > 1:
+#             print('%s %s' % (tarname, actual_revs))
+
+#     return revisions
+
+
 if __name__ == '__main__':
     args = parse_args()
     root_dir = args.mirror_root_dir
 
-    revisions = {}
-    # line model:
-    # dd7c4dd9edb4bbd06b6df503f10d113ab54beff5 "autoconf.texi.tar.gz" "tar"
-    db_url = 'service=swh-dev'
-    db = Db.connect(db_url)
-    with db.transaction() as cur:
-        for data in db.read_archives():
-            revision_id = hashutil.hash_to_hex(data[0])
-            tarname = data[1]
-            revisions[tarname] = revision_id
+    db_url = args.db_url
+    if db_url:
+        revisions = read_revisions_per_tarname_from_db(db_url)
+    # else:
+    #     revisions = read_revisions_per_tarname_from_stdin()
 
+    db = Db.connect(db_url or 'service=swh-dev')
+    with db.transaction() as cur:
         # scan folder
+        count = 0
         for tarpath, _ in file.archives_from(root_dir):
             length = os.path.getsize(tarpath)
             name = os.path.basename(tarpath)
 
             checksums = utils.convert_to_hex(hashutil.hashfile(tarpath))
 
-            revid = revisions.get(name)
+            checksums_key = ''.join([checksums['sha1'],
+                                     checksums['sha256'],
+                                     checksums['sha1_git']])
+            revids = revisions.get(name)
 
-            if revid:
-                # query = "update revision set metadata = jsonb_set(metadata, '{original_artifact,0,length}', '%s') where id='\\x%s' and metadata#>>'{original_artifact,0,sha1}' = '%s' and metadata#>>'{original_artifact,0,sha256}' = '%s' and metadata#>>'{original_artifact,0,sha1_git}' = '%s' and metadata#>>'{original_artifact,0,name}' = '%s';" % (length, revid, checksums['sha1'], checksums['sha256'], checksums['sha1_git'], name)
-                cur.execute(query)
-                print(query)
+            if not revids:
+                # print('%s not found, skipped...' % name)
+                continue
+
+            revid = revids.get(checksums_key)
+            if not revid:
+                # print('%s not found, skipped...' % revid)
+                continue
+
+            count += 1
+            print('revision %s tarpath %s' % (revid, tarpath))
+            query = """
+                update revision
+                set metadata = jsonb_set(metadata,
+                                         '{original_artifact,0,length}', '%s')
+                where id='\\x%s' and
+                      metadata#>>'{original_artifact,0,sha1}' = '%s' and
+                      metadata#>>'{original_artifact,0,sha256}' = '%s' and
+                      metadata#>>'{original_artifact,0,sha1_git}' = '%s' and
+                      metadata#>>'{original_artifact,0,name}' = '%s'""" % (
+                          length, revid, checksums['sha1'],
+                          checksums['sha256'], checksums['sha1_git'], name)
+            cur.execute(query)
+
+    print('%s updates' % count)
