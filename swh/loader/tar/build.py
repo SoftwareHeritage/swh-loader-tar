@@ -3,9 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-
 import os
-import datetime
 
 from swh.loader.tar import utils
 
@@ -43,30 +41,7 @@ def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
     }
 
 
-def _build_occurrence(tarpath, authority_id, validity_ts):
-    """Build an occurrence from branch_name, authority_id and validity_ts.
-
-    Args:
-        - tarpath: file's path
-        - authority_id: swh authority id (as per swh's storage values in
-        organization table)
-        - validity_ts: validity timestamp
-
-    Returns:
-        Occurrence dictionary
-        - tarpath: file's path
-        - authority: swh authority
-        - validity: validity date (e.g. 2015-01-01 00:00:00+00)
-    """
-    validity = '%s+00' % datetime.datetime.utcfromtimestamp(validity_ts)
-    return {
-        'branch': os.path.basename(tarpath),
-        'authority': authority_id,
-        'validity': validity
-    }
-
-
-def occurrence_with_ctime(authority, tarpath):
+def occurrence_with_date(date, tarpath):
     """Compute the occurrence using the tarpath's ctime.
 
     Args:
@@ -77,8 +52,10 @@ def occurrence_with_ctime(authority, tarpath):
         Occurrence dictionary (cf. _build_occurrence)
 
     """
-    validity_ts = os.lstat(tarpath).st_ctime
-    return _build_occurrence(tarpath, authority, validity_ts)
+    return {
+        'branch': os.path.basename(tarpath),
+        'date': date
+    }
 
 
 def _time_from_path(tarpath):
@@ -86,21 +63,6 @@ def _time_from_path(tarpath):
 
     """
     return os.lstat(tarpath).st_mtime
-
-
-def occurrence_with_mtime(authority, tarpath):
-    """Compute the occurrence from the tarpath using the tarpath's mtime.
-
-    Args:
-        authority: the authority's uuid
-        tarpath: file's path
-
-    Return:
-        Occurrence dictionary (cf. _build_occurrence)
-
-    """
-    validity_ts = _time_from_path(tarpath)
-    return _build_occurrence(tarpath, authority, validity_ts)
 
 
 def compute_revision(tarpath):
