@@ -87,8 +87,8 @@ class Db:
         with self.conn.cursor() as cur:
             try:
                 yield cur
-                # self.conn.commit()
-                self.conn.rollback()  # hack for test
+                self.conn.commit()
+                # self.conn.rollback()  # hack for test
             except:
                 if not self.conn.closed:
                     self.conn.rollback()
@@ -142,37 +142,14 @@ def read_revisions_per_tarname_from_db(db_url):
 
     return revisions
 
-
-# def read_revisions_per_tarname_from_stdin():
-#     revisions = {}
-#     # line model:
-#     # dd7c4dd9edb4bbd06b6df503f10d113ab54beff5 "autoconf.texi.tar.gz" "tar"
-#     for data in sys.stdin:
-#         data = data.rstrip().split(' ')
-#         revision_id = data[0]
-#         tarname = data[1]
-#         l = revisions.get(tarname, [])
-#         l.append(revision_id)
-#         revisions[tarname] = l
-
-#         actual_revs = revisions.get(tarname)
-#         if actual_revs and len(actual_revs) > 1:
-#             print('%s %s' % (tarname, actual_revs))
-
-#     return revisions
-
-
 if __name__ == '__main__':
     args = parse_args()
     root_dir = args.mirror_root_dir
 
     db_url = args.db_url
-    if db_url:
-        revisions = read_revisions_per_tarname_from_db(db_url)
-    # else:
-    #     revisions = read_revisions_per_tarname_from_stdin()
+    revisions = read_revisions_per_tarname_from_db(db_url)
 
-    db = Db.connect(db_url or 'service=swh-dev')
+    db = Db.connect(db_url)
     with db.transaction() as cur:
         # scan folder
         count = 0
@@ -188,12 +165,13 @@ if __name__ == '__main__':
             revids = revisions.get(name)
 
             if not revids:
-                # print('%s not found, skipped...' % name)
+                print('(%s, %s) not found, skipped...' % (name, tarpath))
                 continue
 
             revid = revids.get(checksums_key)
             if not revid:
-                # print('%s not found, skipped...' % revid)
+                print('(%s, %s, %s) not found, skipped...' % (
+                    name, revid, tarpath))
                 continue
 
             count += 1
