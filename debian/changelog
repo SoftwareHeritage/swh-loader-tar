@@ -1,8 +1,11 @@
-swh-loader-tar (0.0.15-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.16-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.16
+  * Fix length to add in metadata at load time
+  * Fix origin_visit time at load time
+  * Add a script to help updating missing length field in db
 
- -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Fri, 19 Feb 2016 19:05:20 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Tue, 08 Mar 2016 19:00:24 +0100
 
 swh-loader-tar (0.0.15-1~swh1) unstable-swh; urgency=medium
 
