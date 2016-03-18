@@ -13,7 +13,7 @@ from swh.loader.tar import build, file
 
 
 def compute_message_from(app, conf, root_dir, tarpath, filename,
-                         date, dry_run=False):
+                         retrieval_date, dry_run=False):
     """Compute and post the message to worker for the archive tarpath.
 
     Args:
