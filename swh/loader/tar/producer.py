@@ -12,6 +12,9 @@ from swh.core import config
 from swh.loader.tar import build, file
 
 
+task_queue = 'swh.loader.tar.tasks.LoadTarRepository'
+
+
 def compute_message_from(app, conf, root_dir, tarpath, filename,
                          retrieval_date, dry_run=False):
     """Compute and post the message to worker for the archive tarpath.
@@ -40,11 +43,11 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
     release = build.compute_release(filename, tarpath)
 
     if not dry_run:
-        app.tasks['swh.loader.tar.tasks.LoadTarRepository'].delay(tarpath,
-                                                                  origin,
-                                                                  revision,
-                                                                  release,
-                                                                  [occurrence])
+        app.tasks[task_queue].delay(tarpath,
+                                    origin,
+                                    revision,
+                                    release,
+                                    [occurrence])
 
 
 def produce_archive_messages_from(app, conf, path,
