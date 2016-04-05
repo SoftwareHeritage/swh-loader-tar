@@ -19,8 +19,8 @@ class TarLoader(loader.DirLoader):
     """A tarball loader.
 
     """
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, origin_id):
+        super().__init__(config, origin_id)
         self.log = logging.getLogger('swh.loader.tar.TarLoader')
 
     def process(self, tarpath, origin, revision, release, occurrences):
