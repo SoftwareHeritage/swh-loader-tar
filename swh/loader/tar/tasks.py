@@ -13,7 +13,7 @@ from swh.loader.tar.loader import TarLoader
 DEFAULT_CONFIG = {
     'storage_class': ('str', 'remote_storage'),
     'storage_args': ('list[str]', ['http://localhost:5000/']),
-    'extraction_dir': '/tmp/swh.loader.tar/',
+    'extraction_dir': ('string', '/tmp/swh.loader.tar/'),
 
     'send_contents': ('bool', True),
     'send_directories': ('bool', True),
@@ -31,7 +31,7 @@ DEFAULT_CONFIG = {
 }
 
 
-class LoadDirRepository(tasks.LoaderCoreTask):
+class LoadTarRepository(tasks.LoaderCoreTask):
     """Import a directory to Software Heritage
 
     """
@@ -58,14 +58,17 @@ class LoadDirRepository(tasks.LoaderCoreTask):
         config = self.config
         storage = get_storage(config['storage_class'], config['storage_args'])
 
+        if 'type' not in origin:  # let the type flow if present
+            origin['type'] = 'tar'
+
         origin['id'] = storage.origin_add_one(origin)
 
         fetch_history_id = self.open_fetch_history(storage, origin['id'])
 
-        result = TarLoader(config).process(tarpath,
-                                           origin,
-                                           revision,
-                                           release,
-                                           occurrences)
+        result = TarLoader(config, origin['id']).process(tarpath,
+                                                         origin,
+                                                         revision,
+                                                         release,
+                                                         occurrences)
 
         self.close_fetch_history(storage, fetch_history_id, result)

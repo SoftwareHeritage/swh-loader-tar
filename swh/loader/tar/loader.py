@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import logging
 import os
 import tempfile
 import shutil
@@ -20,8 +19,10 @@ class TarLoader(loader.DirLoader):
 
     """
     def __init__(self, config, origin_id):
-        super().__init__(config, origin_id)
-        self.log = logging.getLogger('swh.loader.tar.TarLoader')
+        super().__init__(config,
+                         origin_id,
+                         revision_type='tar',
+                         logging_class='swh.loader.tar.TarLoader')
 
     def process(self, tarpath, origin, revision, release, occurrences):
         """Load a tarball in backend.
@@ -64,14 +65,6 @@ class TarLoader(loader.DirLoader):
               - validity: validity date (e.g. 2015-01-01 00:00:00+00)
 
         """
-        if 'type' not in origin:  # let the type flow if present
-            origin['type'] = 'tar'
-
-        origin['id'] = self.storage.origin_add_one(origin)
-
-        # Mark the start of the loading
-        fetch_history_id = self.open_fetch_history(origin['id'])
-
         # Prepare the extraction path
         extraction_dir = self.config['extraction_dir']
         os.makedirs(extraction_dir, 0o755, exist_ok=True)
@@ -95,8 +88,8 @@ class TarLoader(loader.DirLoader):
                 'original_artifact': [artifact],
             }
 
-            result = super().process(dir_path, origin, revision, release,
-                                     occurrences)
+            return super().process(dir_path, origin, revision, release,
+                                   occurrences)
         except:
             e_info = sys.exc_info()
             if not result['status']:
@@ -105,15 +98,6 @@ class TarLoader(loader.DirLoader):
                     e_info[1],
                     ''.join(traceback.format_tb(e_info[2])),
                     result.get('stderr', ''))
-
-            raise
+                return result
         finally:
             shutil.rmtree(dir_path)
-
-            if not result['status']:
-                result['stderr'] = 'archive:%s\nreason:%s' % (
-                    tarpath,
-                    result.get('stderr', ''))
-
-            # mark the end of the loading
-            self.close_fetch_history(fetch_history_id, result)
