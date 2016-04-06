@@ -6,5 +6,5 @@ swh.core >= 0.0.14
 swh.scheduler
 swh.storage >= 0.0.31
 swh.loader.dir >= 0.0.16
-swh.loader.core
+swh.loader.vcs
 retrying
