@@ -21,7 +21,6 @@ class TarLoader(loader.DirLoader):
     def __init__(self, config, origin_id):
         super().__init__(config,
                          origin_id,
-                         revision_type='tar',
                          logging_class='swh.loader.tar.TarLoader')
 
     def process(self, tarpath, origin, revision, release, occurrences):
