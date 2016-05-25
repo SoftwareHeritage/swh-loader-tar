@@ -8,7 +8,6 @@ requirements.txt
 setup.py
 version.txt
 bin/swh-diff-db-mirror
-bin/swh-loader-tar-producer
 bin/swh-loader-tar-retrieve-tarball
 bin/swh-ls-tarball-size
 bin/swh-update-tarball-size
@@ -29,10 +28,12 @@ swh.loader.tar.egg-info/SOURCES.txt
 swh.loader.tar.egg-info/dependency_links.txt
 swh.loader.tar.egg-info/requires.txt
 swh.loader.tar.egg-info/top_level.txt
+swh/loader/tar/__init__.py
 swh/loader/tar/build.py
 swh/loader/tar/db.py
 swh/loader/tar/file.py
 swh/loader/tar/loader.py
+swh/loader/tar/producer.py
 swh/loader/tar/tarball.py
 swh/loader/tar/tasks.py
 swh/loader/tar/utils.py
