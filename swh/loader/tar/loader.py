@@ -18,6 +18,10 @@ class TarLoader(loader.DirLoader):
     """A tarball loader.
 
     """
+    ADDITIONAL_CONFIG = {
+        'extraction_dir': ('string', '/tmp')
+    }
+
     def __init__(self, origin_id):
         super().__init__(origin_id,
                          logging_class='swh.loader.tar.TarLoader')
