@@ -10,9 +10,12 @@ from swh.loader.tar import utils
 
 # Static setup
 EPOCH = 0
-UTC_OFFSET = '+0000'
-SWH_PERSON = 'Software Heritage'
-SWH_MAIL = 'robot@softwareheritage.org'
+UTC_OFFSET = 0
+SWH_PERSON = {
+    'name': 'Software Heritage',
+    'fullname': 'Software Heritage',
+    'email': 'robot@softwareheritage.org'
+}
 REVISION_MESSAGE = 'synthetic revision message'
 RELEASE_MESSAGE = 'synthetic release message'
 REVISION_TYPE = 'tar'
@@ -73,29 +76,27 @@ def compute_revision(tarpath):
 
     Returns:
         Revision as dict:
-        - author_date: the modification timestamp as returned by a fstat call
-        - author_offset: +0000
+        - date: the modification timestamp as returned by a fstat call
         - committer_date: the modification timestamp as returned by a fstat
         call
-        - committer_offset: +0000
-        - author_name: cf. SWH_PERSON
-        - author_email: cf. SWH_MAIL
-        - committer_name: cf. SWH_MAIL
-        - committer_email: cf. SWH_MAIL
+        - author: cf. SWH_PERSON
+        - committer: cf. SWH_PERSON
         - type: cf. REVISION_TYPE
         - message: cf. REVISION_MESSAGE
 
     """
     ts = _time_from_path(tarpath)
     return {
-        'author_date': ts,
-        'author_offset': UTC_OFFSET,
-        'committer_date': ts,
-        'committer_offset': UTC_OFFSET,
-        'author_name': SWH_PERSON,
-        'author_email': SWH_MAIL,
-        'committer_name': SWH_PERSON,
-        'committer_email': SWH_MAIL,
+        'date': {
+            'timestamp': ts,
+            'offset': UTC_OFFSET,
+        },
+        'committer_date': {
+            'timestamp': ts,
+            'offset': UTC_OFFSET,
+        },
+        'author': SWH_PERSON,
+        'committer': SWH_PERSON,
         'type': REVISION_TYPE,
         'message': REVISION_MESSAGE,
     }
@@ -115,7 +116,7 @@ def compute_release(filename, tarpath):
         Otherwise a synthetic release is computed with the following keys:
             - name: the release computed from the filename
             - date: the modification timestamp as returned by a fstat call
-            - offset: +0000
+            - offset: 0
             - author_name: ''
             - author_email: ''
             - comment: ''
@@ -125,10 +126,11 @@ def compute_release(filename, tarpath):
     if release_number:
         return {
             'name': release_number,
-            'date': _time_from_path(tarpath),
-            'offset': UTC_OFFSET,
-            'author_name': SWH_PERSON,
-            'author_email': SWH_MAIL,
-            'comment': RELEASE_MESSAGE,
+            'date': {
+                'timestamp': _time_from_path(tarpath),
+                'offset': UTC_OFFSET,
+            },
+            'author': SWH_PERSON,
+            'message': RELEASE_MESSAGE,
         }
     return None
