@@ -6,8 +6,6 @@
 import os
 import tempfile
 import shutil
-import sys
-import traceback
 
 from swh.core import hashutil
 from swh.loader.dir import loader
@@ -18,6 +16,12 @@ class TarLoader(loader.DirLoader):
     """A tarball loader.
 
     """
+    CONFIG_BASE_FILENAME = 'loader/tar.ini'
+
+    ADDITIONAL_CONFIG = {
+        'extraction_dir': ('string', '/tmp')
+    }
+
     def __init__(self, origin_id):
         super().__init__(origin_id,
                          logging_class='swh.loader.tar.TarLoader')
@@ -73,9 +77,6 @@ class TarLoader(loader.DirLoader):
         artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
         artifact['name'] = os.path.basename(tarpath)
 
-        # for edge cases (NotImplemented...)
-        result = {'status': False, 'stderr': ''}
-
         try:
             self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
             nature = tarball.uncompress(tarpath, dir_path)
@@ -88,14 +89,5 @@ class TarLoader(loader.DirLoader):
 
             return super().process(dir_path, origin, revision, release,
                                    occurrences)
-        except:
-            e_info = sys.exc_info()
-            if not result['status']:
-                # Enrich the error message with the tarball
-                result['stderr'] = 'reason:%s\ntrace:%s\n%s' % (
-                    e_info[1],
-                    ''.join(traceback.format_tb(e_info[2])),
-                    result.get('stderr', ''))
-                return result
         finally:
             shutil.rmtree(dir_path)
