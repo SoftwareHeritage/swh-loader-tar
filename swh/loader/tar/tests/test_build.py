@@ -62,11 +62,12 @@ class TestBuildUtils(unittest.TestCase):
         # given
         expected_release = {
             'name': '1.2.3rc1',
-            'date': 'some-time',
-            'offset': build.UTC_OFFSET,
-            'author_name': build.SWH_PERSON,
-            'author_email': build.SWH_MAIL,
-            'comment': build.RELEASE_MESSAGE,
+            'date': {
+                'timestamp': 'some-time',
+                'offset': build.UTC_OFFSET,
+            },
+            'author': build.SWH_PERSON,
+            'message': build.RELEASE_MESSAGE,
         }
 
         # when
@@ -87,14 +88,16 @@ class TestBuildUtils(unittest.TestCase):
             actual_revision = build.compute_revision('/some/path')
 
         expected_revision = {
-            'author_date': 'some-other-time',
-            'author_offset': build.UTC_OFFSET,
-            'committer_date': 'some-other-time',
-            'committer_offset': build.UTC_OFFSET,
-            'author_name': build.SWH_PERSON,
-            'author_email': build.SWH_MAIL,
-            'committer_name': build.SWH_PERSON,
-            'committer_email': build.SWH_MAIL,
+            'date': {
+                'timestamp': 'some-other-time',
+                'offset': build.UTC_OFFSET,
+            },
+            'committer_date': {
+                'timestamp': 'some-other-time',
+                'offset': build.UTC_OFFSET,
+            },
+            'author': build.SWH_PERSON,
+            'committer': build.SWH_PERSON,
             'type': build.REVISION_TYPE,
             'message': build.REVISION_MESSAGE,
         }

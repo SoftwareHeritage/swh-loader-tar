@@ -23,7 +23,7 @@ class LoadTarRepository(tasks.LoaderCoreTask):
               cf. swh.loader.dir.loader.run docstring
 
         """
-        storage = TarLoader().storage
+        storage = TarLoader(origin_id=None).storage
 
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'
