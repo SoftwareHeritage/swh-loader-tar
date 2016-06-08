@@ -5,6 +5,6 @@ vcversioner
 swh.core >= 0.0.14
 swh.scheduler
 swh.storage >= 0.0.31
-swh.loader.dir >= 0.0.18
-swh.loader.core >= 0.0.5
+swh.loader.dir >= 0.0.19
+swh.loader.core >= 0.0.7
 retrying
