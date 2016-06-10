@@ -13,6 +13,7 @@ class LoadTarRepository(tasks.LoaderCoreTask):
 
     """
     task_queue = 'swh_loader_tar'
+    CONFIG_BASE_FILENAME = 'loader/tar.ini'
 
     def run(self, tarpath, origin, revision, release, occurrences):
         """Import a tarball into swh.
@@ -23,14 +24,12 @@ class LoadTarRepository(tasks.LoaderCoreTask):
               cf. swh.loader.dir.loader.run docstring
 
         """
-        storage = TarLoader(origin_id=None).storage
-
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'
 
-        origin['id'] = storage.origin_add_one(origin)
+        origin['id'] = self.storage.origin_add_one(origin)
 
-        fetch_history_id = self.open_fetch_history(storage, origin['id'])
+        fetch_history_id = self.open_fetch_history(origin['id'])
 
         result = TarLoader(origin['id']).process(tarpath,
                                                  origin,
@@ -38,4 +37,4 @@ class LoadTarRepository(tasks.LoaderCoreTask):
                                                  release,
                                                  occurrences)
 
-        self.close_fetch_history(storage, fetch_history_id, result)
+        self.close_fetch_history(fetch_history_id, result)
