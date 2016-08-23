@@ -3,11 +3,13 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import datetime
 import os
 import tempfile
 import shutil
 
 from swh.core import hashutil
+from swh.model.git import GitType
 from swh.loader.dir import loader
 from swh.loader.tar import tarball, utils
 
@@ -22,16 +24,14 @@ class TarLoader(loader.DirLoader):
         'extraction_dir': ('string', '/tmp')
     }
 
-    def __init__(self, origin_id):
-        super().__init__(origin_id,
-                         logging_class='swh.loader.tar.TarLoader')
+    def __init__(self):
+        super().__init__(logging_class='swh.loader.tar.TarLoader')
 
-    def process(self, tarpath, origin, revision, release, occurrences):
-        """Load a tarball in backend.
+    def load(self, tarpath, origin, visit, revision, release, occurrences):
+        """
+        Load a tarball in backend.
 
         This will:
-        - persist the origin if it does not exist.
-        - write an entry in fetch_history to mark the loading tarball start
         - uncompress locally the tarballs in a temporary location
         - process the content of the tarballs to persist on swh storage
         - clean up the temporary location
@@ -42,6 +42,7 @@ class TarLoader(loader.DirLoader):
             - origin: Dictionary origin
               - url: url origin we fetched
               - type: type of the origin
+            - visit: Numbered visit
             - revision: Dictionary of information needed, keys are:
               - author_name: revision's author name
               - author_email: revision's author email
@@ -87,7 +88,52 @@ class TarLoader(loader.DirLoader):
                 'original_artifact': [artifact],
             }
 
-            return super().process(dir_path, origin, revision, release,
-                                   occurrences)
+            return super().load(
+                dir_path, origin, visit, revision, release, occurrences)
         finally:
             shutil.rmtree(dir_path)
+
+    def prepare_and_load(self,
+                         tarpath, origin, revision, release, occurrences):
+        """
+        Prepare origin, fetch_origin, origin_visit
+        Then load a tarball 'tarpath'.
+        Then close origin_visit, fetch_history
+
+        First:
+        - creates an origin if it does not exist
+        - creates a fetch_history entry
+        - creates an origin_visit
+        - Then loads the tarball
+
+        """
+        if 'type' not in origin:  # let the type flow if present
+            origin['type'] = 'tar'
+
+        self.origin_id = self.storage.origin_add_one(origin)
+        origin['id'] = self.origin_id
+
+        date_visit = datetime.datetime.now(tz=datetime.timezone.utc)
+        origin_visit = self.storage.origin_visit_add(origin['id'], date_visit)
+        visit = origin_visit['visit']
+
+        fetch_history_id = self.open_fetch_history()
+
+        try:
+            result = self.load(
+                tarpath, origin, visit, revision, release, occurrences)
+            result_to_store = {
+                'contents': len(result['objects'][GitType.BLOB]),
+                'directories': len(result['objects'][GitType.TREE]),
+                'revisions': len(result['objects'][GitType.COMM]),
+                'releases': len(result['objects'][GitType.RELE]),
+                'occurrences': len(result['objects'][GitType.REFS]),
+            }
+            self.close_fetch_history_success(fetch_history_id, result_to_store)
+            self.storage.origin_visit_update(
+                self.origin_id, origin_visit['visit'], status='full')
+        except:
+            self.close_fetch_history_failure(fetch_history_id)
+            self.storage.origin_visit_update(
+                self.origin_id, origin_visit['visit'], status='partial')
+            raise
