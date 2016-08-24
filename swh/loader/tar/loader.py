@@ -9,7 +9,6 @@ import tempfile
 import shutil
 
 from swh.core import hashutil
-from swh.model.git import GitType
 from swh.loader.dir import loader
 from swh.loader.tar import tarball, utils
 
@@ -120,16 +119,8 @@ class TarLoader(loader.DirLoader):
         fetch_history_id = self.open_fetch_history()
 
         try:
-            result = self.load(
-                tarpath, origin, visit, revision, release, occurrences)
-            result_to_store = {
-                'contents': len(result['objects'][GitType.BLOB]),
-                'directories': len(result['objects'][GitType.TREE]),
-                'revisions': len(result['objects'][GitType.COMM]),
-                'releases': len(result['objects'][GitType.RELE]),
-                'occurrences': len(result['objects'][GitType.REFS]),
-            }
-            self.close_fetch_history_success(fetch_history_id, result_to_store)
+            self.load(tarpath, origin, visit, revision, release, occurrences)
+            self.close_fetch_history_success(fetch_history_id)
             self.storage.origin_visit_update(
                 self.origin_id, origin_visit['visit'], status='full')
         except:
