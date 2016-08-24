@@ -1,3 +1,10 @@
+swh-loader-tar (0.0.21-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.21
+  * Update tar loader to register origin_visit's state
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 24 Aug 2016 14:52:57 +0200
+
 swh-loader-tar (0.0.20-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.20
