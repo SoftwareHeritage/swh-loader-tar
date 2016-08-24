@@ -3,17 +3,16 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.loader.core import tasks
+from swh.scheduler.task import Task
 
 from swh.loader.tar.loader import TarLoader
 
 
-class LoadTarRepository(tasks.LoaderCoreTask):
+class LoadTarRepository(Task):
     """Import a directory to Software Heritage
 
     """
     task_queue = 'swh_loader_tar'
-    CONFIG_BASE_FILENAME = 'loader/tar.ini'
 
     def run(self, tarpath, origin, revision, release, occurrences):
         """Import a tarball into swh.
@@ -24,17 +23,5 @@ class LoadTarRepository(tasks.LoaderCoreTask):
               cf. swh.loader.dir.loader.run docstring
 
         """
-        if 'type' not in origin:  # let the type flow if present
-            origin['type'] = 'tar'
-
-        origin['id'] = self.storage.origin_add_one(origin)
-
-        fetch_history_id = self.open_fetch_history(origin['id'])
-
-        result = TarLoader(origin['id']).process(tarpath,
-                                                 origin,
-                                                 revision,
-                                                 release,
-                                                 occurrences)
-
-        self.close_fetch_history(fetch_history_id, result)
+        TarLoader().prepare_and_load(
+            tarpath, origin, revision, release, occurrences)
