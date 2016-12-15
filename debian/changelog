@@ -1,3 +1,10 @@
+swh-loader-tar (0.0.22-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.22
+  * Update storage configuration reading
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 15 Dec 2016 18:53:35 +0100
+
 swh-loader-tar (0.0.21-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.21
