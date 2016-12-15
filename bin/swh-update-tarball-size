@@ -154,6 +154,7 @@ def read_revisions_per_tarname_from_db(root_dir, db_url):
                 'sha1_git': data['sha1_git'],
             }
 
+
 if __name__ == '__main__':
     args = parse_args()
     root_dir = args.mirror_root_dir
