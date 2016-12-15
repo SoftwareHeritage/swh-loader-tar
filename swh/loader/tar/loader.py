@@ -17,7 +17,7 @@ class TarLoader(loader.DirLoader):
     """A tarball loader.
 
     """
-    CONFIG_BASE_FILENAME = 'loader/tar.ini'
+    CONFIG_BASE_FILENAME = 'loader/tar'
 
     ADDITIONAL_CONFIG = {
         'extraction_dir': ('string', '/tmp')
