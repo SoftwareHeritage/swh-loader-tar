@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -30,9 +30,6 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
     Returns:
         None
 
-    Raises:
-        ValueError when release number computation error arise.
-
     """
     origin = build.compute_origin(conf['url_scheme'],
                                   conf['type'],
@@ -40,13 +37,11 @@ def compute_message_from(app, conf, root_dir, tarpath, filename,
                                   tarpath)
     revision = build.compute_revision(tarpath)
     occurrence = build.occurrence_with_date(retrieval_date, tarpath)
-    release = build.compute_release(filename, tarpath)
 
     if not dry_run:
         app.tasks[task_queue].delay(tarpath,
                                     origin,
                                     revision,
-                                    release,
                                     [occurrence])
 
 

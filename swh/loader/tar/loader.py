@@ -26,7 +26,7 @@ class TarLoader(loader.DirLoader):
     def __init__(self):
         super().__init__(logging_class='swh.loader.tar.TarLoader')
 
-    def load(self, tarpath, origin, visit, revision, release, occurrences):
+    def load(self, tarpath, origin, visit, revision, occurrences):
         """
         Load a tarball in backend.
 
@@ -88,12 +88,13 @@ class TarLoader(loader.DirLoader):
             }
 
             return super().load(
-                dir_path, origin, visit, revision, release, occurrences)
+                dir_path, origin, visit, revision,
+                release={}, occurrences=occurrences)
         finally:
             shutil.rmtree(dir_path)
 
     def prepare_and_load(self,
-                         tarpath, origin, revision, release, occurrences):
+                         tarpath, origin, revision, occurrences):
         """
         Prepare origin, fetch_origin, origin_visit
         Then load a tarball 'tarpath'.
@@ -119,7 +120,7 @@ class TarLoader(loader.DirLoader):
         fetch_history_id = self.open_fetch_history()
 
         try:
-            self.load(tarpath, origin, visit, revision, release, occurrences)
+            self.load(tarpath, origin, visit, revision, occurrences)
             self.close_fetch_history_success(fetch_history_id)
             self.storage.origin_visit_update(
                 self.origin_id, origin_visit['visit'], status='full')

@@ -1,4 +1,4 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -17,7 +17,6 @@ SWH_PERSON = {
     'email': 'robot@softwareheritage.org'
 }
 REVISION_MESSAGE = 'synthetic revision message'
-RELEASE_MESSAGE = 'synthetic release message'
 REVISION_TYPE = 'tar'
 
 
@@ -100,37 +99,3 @@ def compute_revision(tarpath):
         'type': REVISION_TYPE,
         'message': REVISION_MESSAGE,
     }
-
-
-def compute_release(filename, tarpath):
-    """Compute a release from a given tarpath, filename.
-    If the tarpath does not contain a recognizable release number, the release
-    can be skipped.
-
-    Args:
-        filename: file's name without path
-        tarpath: file's absolute path
-
-    Returns:
-        None if the release number cannot be extracted from the filename.
-        Otherwise a synthetic release is computed with the following keys:
-            - name: the release computed from the filename
-            - date: the modification timestamp as returned by a fstat call
-            - offset: 0
-            - author_name: ''
-            - author_email: ''
-            - comment: ''
-
-    """
-    release_number = utils.release_number(filename)
-    if release_number:
-        return {
-            'name': release_number,
-            'date': {
-                'timestamp': _time_from_path(tarpath),
-                'offset': UTC_OFFSET,
-            },
-            'author': SWH_PERSON,
-            'message': RELEASE_MESSAGE,
-        }
-    return None
