@@ -63,8 +63,24 @@ def occurrence_with_date(date, tarpath):
 def _time_from_path(tarpath):
     """Compute the modification time from the tarpath.
 
+    Args:
+        tarpath (str|bytes): Full path to the archive to extract the
+        date from.
+
+    Returns:
+        dict representing a timestamp with keys seconds and microseconds keys.
+
     """
-    return os.lstat(tarpath).st_mtime
+    mtime = os.lstat(tarpath).st_mtime
+    if isinstance(mtime, float):
+        normalized_time = list(map(int, str(mtime).split('.')))
+    else:  # assuming int
+        normalized_time = [mtime, 0]
+
+    return {
+        'seconds': normalized_time[0],
+        'microseconds': normalized_time[1]
+    }
 
 
 def compute_revision(tarpath):
@@ -75,9 +91,10 @@ def compute_revision(tarpath):
 
     Returns:
         Revision as dict:
-        - date: the modification timestamp as returned by a fstat call
-        - committer_date: the modification timestamp as returned by a fstat
-        call
+        - date (dict): the modification timestamp as returned by
+                       _time_from_path function
+        - committer_date: the modification timestamp as returned by
+                       _time_from_path function
         - author: cf. SWH_PERSON
         - committer: cf. SWH_PERSON
         - type: cf. REVISION_TYPE

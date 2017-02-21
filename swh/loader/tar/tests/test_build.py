@@ -45,12 +45,13 @@ class TestBuildUtils(unittest.TestCase):
         # then
         self.assertEquals(actual_occurrence, expected_occurrence)
 
+    @patch('swh.loader.tar.build._time_from_path')
     @istest
-    def compute_revision(self):
+    def compute_revision(self, mock_time_from_path):
+        mock_time_from_path.return_value = 'some-other-time'
+
         # when
-        with patch('swh.loader.tar.build._time_from_path',
-                   return_value='some-other-time'):
-            actual_revision = build.compute_revision('/some/path')
+        actual_revision = build.compute_revision('/some/path')
 
         expected_revision = {
             'date': {
@@ -69,3 +70,38 @@ class TestBuildUtils(unittest.TestCase):
 
         # then
         self.assertEquals(actual_revision, expected_revision)
+
+        mock_time_from_path.assert_called_once_with('/some/path')
+
+    @patch('swh.loader.tar.build.os')
+    @istest
+    def time_from_path_with_float(self, mock_os):
+        class MockStat:
+            st_mtime = 1445348286.8308342
+        mock_os.lstat.return_value = MockStat()
+
+        actual_time = build._time_from_path('some/path')
+
+        self.assertEquals(actual_time, {
+            'seconds': 1445348286,
+            'microseconds': 8308342
+        })
+
+        mock_os.lstat.assert_called_once_with('some/path')
+
+    @patch('swh.loader.tar.build.os')
+    @istest
+    def time_from_path_with_int(self, mock_os):
+        class MockStat:
+            st_mtime = 1445348286
+
+        mock_os.lstat.return_value = MockStat()
+
+        actual_time = build._time_from_path('some/path')
+
+        self.assertEquals(actual_time, {
+            'seconds': 1445348286,
+            'microseconds': 0
+        })
+
+        mock_os.lstat.assert_called_once_with('some/path')
