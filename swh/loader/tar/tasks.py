@@ -25,4 +25,4 @@ class LoadTarRepository(Task):
         """
         loader = TarLoader()
         loader.log = self.log
-        loader.prepare_and_load(tarpath, origin, revision, occurrences)
+        loader.load(tarpath, origin, revision, occurrences)

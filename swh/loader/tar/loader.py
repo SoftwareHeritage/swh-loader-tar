@@ -26,22 +26,22 @@ class TarLoader(loader.DirLoader):
     def __init__(self):
         super().__init__(logging_class='swh.loader.tar.TarLoader')
 
-    def load(self, tarpath, origin, visit, revision, occurrences):
-        """
-        Load a tarball in backend.
-
-        This will:
+    def load(self, tarpath, origin, revision, occurrences):
+        """Load a tarball in backend:
+        - creates an origin if it does not exist
+        - creates a fetch_history entry
+        - creates an origin_visit
         - uncompress locally the tarballs in a temporary location
         - process the content of the tarballs to persist on swh storage
         - clean up the temporary location
         - write an entry in fetch_history to mark the loading tarball end
+        (success or failure)
 
         Args:
             - tarpath: path to the tarball to uncompress
             - origin: Dictionary origin
               - url: url origin we fetched
               - type: type of the origin
-            - visit: Numbered visit
             - revision: Dictionary of information needed, keys are:
               - author_name: revision's author name
               - author_email: revision's author email
@@ -53,58 +53,11 @@ class TarLoader(loader.DirLoader):
               - committer_offset: date offset e.g. -0220, +0100
               - type: type of revision dir, tar
               - message: synthetic message for the revision
-            - release: Dictionary of information needed, keys are:
-              - name: release name
-              - date: release timestamp (e.g. 1444054085)
-              - offset: release date offset e.g. -0220, +0100
-              - author_name: release author's name
-              - author_email: release author's email
-              - comment: release's comment message
             - occurrences: List of occurrence dictionary.
               Information needed, keys are:
               - branch: occurrence's branch name
               - authority_id: authority id (e.g. 1 for swh)
               - validity: validity date (e.g. 2015-01-01 00:00:00+00)
-
-        """
-        # Prepare the extraction path
-        extraction_dir = self.config['extraction_dir']
-        os.makedirs(extraction_dir, 0o755, exist_ok=True)
-        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
-                                    dir=extraction_dir)
-
-        # add checksums in revision
-        artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
-        artifact['name'] = os.path.basename(tarpath)
-
-        try:
-            self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
-            nature = tarball.uncompress(tarpath, dir_path)
-            artifact['archive_type'] = nature
-            artifact['length'] = os.path.getsize(tarpath)
-
-            revision['metadata'] = {
-                'original_artifact': [artifact],
-            }
-
-            return super().load(
-                dir_path, origin, visit, revision,
-                release={}, occurrences=occurrences)
-        finally:
-            shutil.rmtree(dir_path)
-
-    def prepare_and_load(self,
-                         tarpath, origin, revision, occurrences):
-        """
-        Prepare origin, fetch_origin, origin_visit
-        Then load a tarball 'tarpath'.
-        Then close origin_visit, fetch_history
-
-        First:
-        - creates an origin if it does not exist
-        - creates a fetch_history entry
-        - creates an origin_visit
-        - Then loads the tarball
 
         """
         if 'type' not in origin:  # let the type flow if present
@@ -118,14 +71,36 @@ class TarLoader(loader.DirLoader):
         visit = origin_visit['visit']
 
         fetch_history_id = self.open_fetch_history()
-
         try:
-            self.load(tarpath, origin, visit, revision, occurrences)
+            # Prepare the extraction path
+            extraction_dir = self.config['extraction_dir']
+            os.makedirs(extraction_dir, 0o755, exist_ok=True)
+            dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
+                                        dir=extraction_dir)
+
+            # add checksums in revision
+            artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
+            artifact['name'] = os.path.basename(tarpath)
+
+            self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
+            nature = tarball.uncompress(tarpath, dir_path)
+            artifact['archive_type'] = nature
+            artifact['length'] = os.path.getsize(tarpath)
+
+            revision['metadata'] = {
+                'original_artifact': [artifact],
+            }
+
+            super().load(dir_path, origin, visit, revision,
+                         release={}, occurrences=occurrences)
             self.close_fetch_history_success(fetch_history_id)
             self.storage.origin_visit_update(
                 self.origin_id, origin_visit['visit'], status='full')
-        except:
+        except Exception as e:
             self.close_fetch_history_failure(fetch_history_id)
             self.storage.origin_visit_update(
                 self.origin_id, origin_visit['visit'], status='partial')
-            raise
+            raise e
+        finally:
+            if dir_path and os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
