@@ -54,17 +54,16 @@ Present in possible locations:
 
 Load tarball directly from code or toplevel:
 
-    from swh.loader.tar.tasks import LoadTarRepository
+    from swh.loader.tar.loader import TarLoader
 
+    tarpath = '/some/path/to/blah-7.8.3.tgz'
     # Fill in those
-    origin = {}
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     revision = {}
     occurrence = {}
 
-    LoadTarRepository().load('/some/path/to/blah-7.8.3.tgz',
-                             origin,
-                             revision,
-                             [occurrence])
+    TarLoader().load(tarpath, origin, visit_date, revision, [occurrence])
 
 
 ### Celery
@@ -89,15 +88,14 @@ You can send the following message to the task queue:
     from swh.loader.tar.tasks import LoadTarRepository
 
     # Fill in those
-    origin = {}
+    tarpath = '/some/path/to/blah-7.8.3.tgz'
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     revision = {}
     occurrence = {}
 
     # Send message to the task queue
-    LoadTarRepository().load(('/some/path/to/blah-7.8.3.tgz',
-                             origin,
-                             revision,
-                             [occurrence]))
+    LoadTarRepository().run((tarpath, origin, visit_date, revision, [occurrence]))
 
 
 Tar Producer
