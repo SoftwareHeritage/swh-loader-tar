@@ -1,9 +1,9 @@
-# Copyright (C) 2015-2016  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import datetime
+
 import os
 import tempfile
 import shutil
@@ -14,20 +14,8 @@ from swh.loader.tar import tarball, utils
 
 
 class TarLoader(loader.DirLoader):
-    """A tarball loader.
+    """A tarball loader:
 
-    """
-    CONFIG_BASE_FILENAME = 'loader/tar'
-
-    ADDITIONAL_CONFIG = {
-        'extraction_dir': ('string', '/tmp')
-    }
-
-    def __init__(self):
-        super().__init__(logging_class='swh.loader.tar.TarLoader')
-
-    def load(self, tarpath, origin, revision, occurrences):
-        """Load a tarball in backend:
         - creates an origin if it does not exist
         - creates a fetch_history entry
         - creates an origin_visit
@@ -42,6 +30,7 @@ class TarLoader(loader.DirLoader):
             - origin: Dictionary origin
               - url: url origin we fetched
               - type: type of the origin
+            - visit_date (str): To override the visit date
             - revision: Dictionary of information needed, keys are:
               - author_name: revision's author name
               - author_email: revision's author email
@@ -59,48 +48,53 @@ class TarLoader(loader.DirLoader):
               - authority_id: authority id (e.g. 1 for swh)
               - validity: validity date (e.g. 2015-01-01 00:00:00+00)
 
+    """
+    CONFIG_BASE_FILENAME = 'loader/tar'
+
+    ADDITIONAL_CONFIG = {
+        'extraction_dir': ('string', '/tmp')
+    }
+
+    def __init__(self):
+        super().__init__(logging_class='swh.loader.tar.TarLoader')
+
+    def prepare(self, *args, **kwargs):
+        """1. Uncompress the tarball in a temporary directory.
+           2. Compute some metadata to update the revision.
+
         """
+        tarpath, origin, visit_date, revision, occs = args
+
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'
 
-        self.origin_id = self.storage.origin_add_one(origin)
-        origin['id'] = self.origin_id
+        # Prepare the extraction path
+        extraction_dir = self.config['extraction_dir']
+        os.makedirs(extraction_dir, 0o755, exist_ok=True)
+        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
+                                    dir=extraction_dir)
 
-        date_visit = datetime.datetime.now(tz=datetime.timezone.utc)
-        origin_visit = self.storage.origin_visit_add(origin['id'], date_visit)
-        visit = origin_visit['visit']
+        # add checksums in revision
+        artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
+        artifact['name'] = os.path.basename(tarpath)
 
-        fetch_history_id = self.open_fetch_history()
-        try:
-            # Prepare the extraction path
-            extraction_dir = self.config['extraction_dir']
-            os.makedirs(extraction_dir, 0o755, exist_ok=True)
-            dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
-                                        dir=extraction_dir)
+        self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
+        nature = tarball.uncompress(tarpath, dir_path)
+        artifact['archive_type'] = nature
+        artifact['length'] = os.path.getsize(tarpath)
 
-            # add checksums in revision
-            artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
-            artifact['name'] = os.path.basename(tarpath)
+        revision['metadata'] = {
+            'original_artifact': [artifact],
+        }
 
-            self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
-            nature = tarball.uncompress(tarpath, dir_path)
-            artifact['archive_type'] = nature
-            artifact['length'] = os.path.getsize(tarpath)
+        self.dir_path = dir_path
 
-            revision['metadata'] = {
-                'original_artifact': [artifact],
-            }
+        super().prepare(dir_path, origin, visit_date, revision, None, occs)
 
-            super().load(dir_path, origin, visit, revision,
-                         release={}, occurrences=occurrences)
-            self.close_fetch_history_success(fetch_history_id)
-            self.storage.origin_visit_update(
-                self.origin_id, origin_visit['visit'], status='full')
-        except Exception as e:
-            self.close_fetch_history_failure(fetch_history_id)
-            self.storage.origin_visit_update(
-                self.origin_id, origin_visit['visit'], status='partial')
-            raise e
-        finally:
-            if dir_path and os.path.exists(dir_path):
-                shutil.rmtree(dir_path)
+    def cleanup(self):
+        """Clean up temporary directory where we uncompress the tarball.
+
+        """
+        dir_path = self.dir_path
+        if dir_path and os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
