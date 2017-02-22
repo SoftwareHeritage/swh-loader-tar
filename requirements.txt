@@ -4,3 +4,4 @@
 vcversioner
 retrying
 click
+python-dateutil

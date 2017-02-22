@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import click
+import dateutil.parser
 
 from swh.scheduler.utils import get_task
 
@@ -14,42 +15,17 @@ from swh.loader.tar import build, file
 TASK_QUEUE = 'swh.loader.tar.tasks.LoadTarRepository'
 
 
-def compute_message_from(
-        conf, root_dir, tarpath, retrieval_date, dry_run=False):
-    """Compute and post the message to worker for the archive tarpath.
-
-    Args:
-        conf: dictionary holding static metadata
-        root_dir: root directory
-        tarball: the archive's representation
-        retrieval_date: retrieval date of information
-        dry_run: will compute but not send messages
-
-    Returns:
-        None
-
-    """
-    origin = build.compute_origin(
-        conf['url_scheme'], conf['type'], root_dir, tarpath)
-    revision = build.compute_revision(tarpath)
-    occurrence = build.occurrence_with_date(retrieval_date, tarpath)
-
-    task = get_task(TASK_QUEUE)
-    if not dry_run:
-        task.delay(tarpath, origin, revision, [occurrence])
-
-
 def produce_archive_messages_from(
-        conf, path, retrieval_date, mirror_file=None, dry_run=False):
-    """From path, produce archive tarball messages to celery.
+        conf, root_dir, visit_date, mirror_file=None, dry_run=False):
+    """From root_dir, produce archive tarball messages to celery.
 
     Will print error message when some computation arise on archive
     and continue.
 
     Args:
         conf: dictionary holding static metadata
-        path: top directory to list archives from.
-        retrieval_date: retrieval date of information
+        root_dir: top directory to list archives from.
+        visit_date: override origin's visit date of information
         mirror_file: a filtering file of tarballs to load
         dry_run: will compute but not send messages
 
@@ -62,13 +38,24 @@ def produce_archive_messages_from(
     block = int(conf['block_messages'])
     count = 0
 
-    path_source_tarballs = mirror_file if mirror_file else path
+    path_source_tarballs = mirror_file if mirror_file else root_dir
+
+    parsed_visit_date = dateutil.parser.parse(visit_date)
+    if not dry_run:
+        task = get_task(TASK_QUEUE)
 
     for tarpath, _ in file.random_archives_from(
             path_source_tarballs, block, limit):
         try:
-            compute_message_from(
-                conf, path, tarpath, retrieval_date, dry_run)
+            origin = build.compute_origin(
+                conf['url_scheme'], conf['type'], root_dir, tarpath)
+            revision = build.compute_revision(tarpath)
+            occurrence = build.occurrence_with_date(visit_date, tarpath)
+
+            if not dry_run:
+                task.delay(tarpath, origin, parsed_visit_date, revision,
+                           [occurrence])
+
             count += 1
         except ValueError:
             print('Problem with the following archive: %s' % tarpath)
@@ -103,8 +90,8 @@ def main(config_file, dry_run, limit):
 
     nb_tarballs = produce_archive_messages_from(
         conf=conf,
-        path=conf['mirror_root_directory'],
-        retrieval_date=conf['date'],
+        root_dir=conf['mirror_root_directory'],
+        visit_date=conf['date'],
         mirror_file=conf.get('mirror_subset_archives'),
         dry_run=dry_run)
 
