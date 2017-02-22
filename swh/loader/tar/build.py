@@ -1,4 +1,4 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -17,7 +17,6 @@ SWH_PERSON = {
     'email': 'robot@softwareheritage.org'
 }
 REVISION_MESSAGE = 'synthetic revision message'
-RELEASE_MESSAGE = 'synthetic release message'
 REVISION_TYPE = 'tar'
 
 
@@ -44,28 +43,42 @@ def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
     }
 
 
-def occurrence_with_date(date, tarpath):
+def compute_occurrence(tarpath):
     """Compute the occurrence using the tarpath's ctime.
 
     Args:
-        authority: the authority's uuid
         tarpath: file's path
 
     Returns:
-        Occurrence dictionary (cf. _build_occurrence)
+        Occurrence dictionary.
 
     """
     return {
         'branch': os.path.basename(tarpath),
-        'date': date
     }
 
 
 def _time_from_path(tarpath):
     """Compute the modification time from the tarpath.
 
+    Args:
+        tarpath (str|bytes): Full path to the archive to extract the
+        date from.
+
+    Returns:
+        dict representing a timestamp with keys seconds and microseconds keys.
+
     """
-    return os.lstat(tarpath).st_mtime
+    mtime = os.lstat(tarpath).st_mtime
+    if isinstance(mtime, float):
+        normalized_time = list(map(int, str(mtime).split('.')))
+    else:  # assuming int
+        normalized_time = [mtime, 0]
+
+    return {
+        'seconds': normalized_time[0],
+        'microseconds': normalized_time[1]
+    }
 
 
 def compute_revision(tarpath):
@@ -76,9 +89,10 @@ def compute_revision(tarpath):
 
     Returns:
         Revision as dict:
-        - date: the modification timestamp as returned by a fstat call
-        - committer_date: the modification timestamp as returned by a fstat
-        call
+        - date (dict): the modification timestamp as returned by
+                       _time_from_path function
+        - committer_date: the modification timestamp as returned by
+                       _time_from_path function
         - author: cf. SWH_PERSON
         - committer: cf. SWH_PERSON
         - type: cf. REVISION_TYPE
@@ -100,37 +114,3 @@ def compute_revision(tarpath):
         'type': REVISION_TYPE,
         'message': REVISION_MESSAGE,
     }
-
-
-def compute_release(filename, tarpath):
-    """Compute a release from a given tarpath, filename.
-    If the tarpath does not contain a recognizable release number, the release
-    can be skipped.
-
-    Args:
-        filename: file's name without path
-        tarpath: file's absolute path
-
-    Returns:
-        None if the release number cannot be extracted from the filename.
-        Otherwise a synthetic release is computed with the following keys:
-            - name: the release computed from the filename
-            - date: the modification timestamp as returned by a fstat call
-            - offset: 0
-            - author_name: ''
-            - author_email: ''
-            - comment: ''
-
-    """
-    release_number = utils.release_number(filename)
-    if release_number:
-        return {
-            'name': release_number,
-            'date': {
-                'timestamp': _time_from_path(tarpath),
-                'offset': UTC_OFFSET,
-            },
-            'author': SWH_PERSON,
-            'message': RELEASE_MESSAGE,
-        }
-    return None
