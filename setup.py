@@ -3,13 +3,13 @@ from setuptools import setup
 
 def parse_requirements():
     requirements = []
-    with open('requirements.txt') as f:
-        for line in f.readlines():
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            requirements.append(line)
-
+    for reqf in ('requirements.txt', 'requirements-swh.txt'):
+        with open(reqf) as f:
+            for line in f.readlines():
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                requirements.append(line)
     return requirements
 
 
@@ -20,9 +20,7 @@ setup(
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/diffusion/DLDTAR',
     packages=['swh.loader.tar', 'swh.loader.tar.tests'],
-    scripts=['bin/swh-diff-db-mirror',
-             'bin/swh-ls-tarball-size',
-             'bin/swh-update-tarball-size'],
+    scripts=[],
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],
     vcversioner={},

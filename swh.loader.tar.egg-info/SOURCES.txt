@@ -4,14 +4,10 @@ LICENSE
 MANIFEST.in
 Makefile
 README
+requirements-swh.txt
 requirements.txt
 setup.py
 version.txt
-bin/swh-diff-db-mirror
-bin/swh-loader-tar-retrieve-tarball
-bin/swh-ls-tarball-size
-bin/swh-update-tarball-size
-bin/test-archive.sh
 debian/changelog
 debian/compat
 debian/control
@@ -22,7 +18,6 @@ resources/create-tarball.ini
 resources/loader/tar.ini
 resources/producer/tar-gnu.ini
 resources/producer/tar-old-gnu.ini
-scratch/count_tarballs.py
 swh.loader.tar.egg-info/PKG-INFO
 swh.loader.tar.egg-info/SOURCES.txt
 swh.loader.tar.egg-info/dependency_links.txt
