@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -14,14 +14,15 @@ class LoadTarRepository(Task):
     """
     task_queue = 'swh_loader_tar'
 
-    def run(self, tarpath, origin, revision, release, occurrences):
+    def run(self, tarpath, origin, visit_date, revision, occurrences):
         """Import a tarball into swh.
 
         Args:
             - tarpath: path to a tarball file
-            - origin, revision, release, occurrences:
-              cf. swh.loader.dir.loader.run docstring
+            - origin, visit_date, revision, release, occurrences:
+              cf. swh.loader.dir.loader.prepare docstring
 
         """
-        TarLoader().prepare_and_load(
-            tarpath, origin, revision, release, occurrences)
+        loader = TarLoader()
+        loader.log = self.log
+        loader.load(tarpath, origin, visit_date, revision, occurrences)

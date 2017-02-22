@@ -1,41 +1,48 @@
 SWH-loader-tar
 ==============
 
-The Software Heritage Tarball Loader is a tool and a library to uncompress a local
-tarball and inject into the SWH dataset all unknown contained files.
+The Software Heritage Tarball Loader is a tool and a library to
+uncompress a local tarball and inject into the SWH dataset all unknown
+contained files.
 
 Tarball loader
 ==============
 
-Its job is to uncompress a tarball and load its content in swh storage.
+Its job is to uncompress a tarball and load its content in swh
+storage.
 
 ### Configuration
 
 This is the loader's (or task's) configuration file.
 
-loader/tar.ini:
+loader/tar.yml:
 
-    [main]
+```
+    extraction_dir: /home/storage/tmp/
+    storage:
+      cls: local
+      args:
+        db: service=swh-dev
+        objstorage:
+          cls: pathslicing
+          args:
+            root: /home/storage/swh-storage
+            slicing: 0:2/2:4/4:6
+    send_contents: True
+    send_directories: True
+    send_revisions: True
+    send_releases: True
+    send_occurrences: True
 
-    # the path where to extract the tarball before loading it into swh
+    content_packet_size: 10000
+    content_packet_block_size_bytes: 104857600
+    content_packet_size_bytes: 1073741824
+    directory_packet_size: 25000
+    revision_packet_size: 100000
+    release_packet_size: 100000
+    occurrence_packet_size: 100000
     extraction_dir = /home/storage/tmp/
-
-    # access to swh's storage
-    storage_class = remote_storage
-    storage_args = http://localhost:5000/
-
-    # parameters to condition loading into swh storage
-    send_contents = True
-    send_directories = True
-    send_revisions = True
-    send_releases = True
-    send_occurrences = True
-    content_packet_size = 10000
-    content_packet_size_bytes = 1073741824
-    directory_packet_size = 25000
-    revision_packet_size = 100000
-    release_packet_size = 100000
-    occurrence_packet_size = 100000
+```
 
 Present in possible locations:
 - ~/.config/swh/loader/tar.ini
@@ -47,19 +54,16 @@ Present in possible locations:
 
 Load tarball directly from code or toplevel:
 
-    from swh.loader.tar.tasks import LoadTarRepository
+    from swh.loader.tar.loader import TarLoader
 
+    tarpath = '/some/path/to/blah-7.8.3.tgz'
     # Fill in those
-    origin = {}
-    release = None
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     revision = {}
     occurrence = {}
 
-    LoadTarRepository().run('/some/path/to/blah-7.8.3.tgz',
-                            origin,
-                            revision,
-                            release,
-                            [occurrence])
+    TarLoader().load(tarpath, origin, visit_date, revision, [occurrence])
 
 
 ### Celery
@@ -84,25 +88,22 @@ You can send the following message to the task queue:
     from swh.loader.tar.tasks import LoadTarRepository
 
     # Fill in those
-    origin = {}
-    release = None
+    tarpath = '/some/path/to/blah-7.8.3.tgz'
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     revision = {}
     occurrence = {}
 
     # Send message to the task queue
-    LoadTarRepository().apply_async(('/some/path/to/blah-7.8.3.tgz',
-                                     origin,
-                                     revision,
-                                     release,
-                                     [occurrence]))
+    LoadTarRepository().run((tarpath, origin, visit_date, revision, [occurrence]))
 
 
 Tar Producer
 ============
 
 Its job is to compulse from a file or a folder a list of existing
-tarball. From this list, compute the corresponding messages to
-send to the broker.
+tarballs. From this list, compute the corresponding messages to send
+to the broker.
 
 #### Configuration
 
@@ -129,24 +130,14 @@ Message producer's configuration file:
     # completely as usual
     # mirror_subset_archives = /home/storage/missing-archives
 
-    # Authorities
-    gnu_authority = 4706c92a-8173-45d9-93d7-06523f249398
-    swh_authority = 5f4d4c51-498a-4e28-88b3-b3e4e8396cba
-
     # Randomize blocks of messages and send for consumption
     block_messages = 250
-
-    # DEV options
-
-    # Tryouts purposes (no limit if not specified)
-    # limit = 10
-
 
 #### Run
 
 Trigger the message computations:
 
-    swh-loader-tar-producer --config ~/.swh/producer/tar.ini
+    python3 -m swh.loader.tar.producer --config ~/.swh/producer/tar.ini
 
 This will walk the `mirror_root_directory` folder and send encountered
 tarball messages for the swh-loader-tar to uncompress (through
@@ -163,14 +154,14 @@ It will displayed the number of tarball messages sent at the end.
 
 Dry run:
 
-    swh-loader-tar-producer --config ~/.swh/producer/tar.ini --dry-run
+    python3 -m swh.loader.tar.producer --config-file ~/.swh/producer/tar.ini --dry-run
 
 This will do the same as previously described but only display the
 number of potential tarball messages computed.
 
 Help:
 
-    swh-loader-tar-producer -h
+    python3 -m swh.loader.tar.producer --help
 
 
 diff-db-mirror
