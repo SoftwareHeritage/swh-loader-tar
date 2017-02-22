@@ -40,7 +40,7 @@ def produce_archive_messages_from(
 
     path_source_tarballs = mirror_file if mirror_file else root_dir
 
-    parsed_visit_date = dateutil.parser.parse(visit_date)
+    visit_date = dateutil.parser.parse(visit_date)
     if not dry_run:
         task = get_task(TASK_QUEUE)
 
@@ -50,11 +50,10 @@ def produce_archive_messages_from(
             origin = build.compute_origin(
                 conf['url_scheme'], conf['type'], root_dir, tarpath)
             revision = build.compute_revision(tarpath)
-            occurrence = build.occurrence_with_date(visit_date, tarpath)
+            occurrence = build.compute_occurrence(tarpath)
 
             if not dry_run:
-                task.delay(tarpath, origin, parsed_visit_date, revision,
-                           [occurrence])
+                task.delay(tarpath, origin, visit_date, revision, [occurrence])
 
             count += 1
         except ValueError:

@@ -43,20 +43,18 @@ def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
     }
 
 
-def occurrence_with_date(date, tarpath):
+def compute_occurrence(tarpath):
     """Compute the occurrence using the tarpath's ctime.
 
     Args:
-        authority: the authority's uuid
         tarpath: file's path
 
     Returns:
-        Occurrence dictionary (cf. _build_occurrence)
+        Occurrence dictionary.
 
     """
     return {
         'branch': os.path.basename(tarpath),
-        'date': date
     }
 
 

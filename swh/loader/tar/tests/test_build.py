@@ -31,16 +31,15 @@ class TestBuildUtils(unittest.TestCase):
         self.assertEquals(actual_origin, expected_origin)
 
     @istest
-    def occurrence_with_date(self):
+    def compute_occurrence(self):
         # given
         expected_occurrence = {
             'branch': b'package-bar.tgz',
-            'date': '2015-10-22 08:44:47.422384+00'
         }
 
         # when
-        actual_occurrence = build.occurrence_with_date(
-            '2015-10-22 08:44:47.422384+00', b'/path/to/package-bar.tgz',)
+        actual_occurrence = build.compute_occurrence(
+            b'/path/to/package-bar.tgz')
 
         # then
         self.assertEquals(actual_occurrence, expected_occurrence)
