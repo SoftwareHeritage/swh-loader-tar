@@ -6,7 +6,7 @@
 import itertools
 import random
 
-from swh.core import hashutil
+from swh.model import hashutil
 
 
 def commonname(path0, path1, as_str=False):

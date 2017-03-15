@@ -8,9 +8,9 @@ import os
 import tempfile
 import shutil
 
-from swh.core import hashutil
 from swh.loader.dir import loader
 from swh.loader.tar import tarball, utils
+from swh.model import hashutil
 
 
 class TarLoader(loader.DirLoader):
@@ -75,7 +75,7 @@ class TarLoader(loader.DirLoader):
                                     dir=extraction_dir)
 
         # add checksums in revision
-        artifact = utils.convert_to_hex(hashutil.hashfile(tarpath))
+        artifact = utils.convert_to_hex(hashutil.hash_path(tarpath))
         artifact['name'] = os.path.basename(tarpath)
 
         self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
