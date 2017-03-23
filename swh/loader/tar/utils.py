@@ -32,7 +32,10 @@ def convert_to_hex(d):
 
     checksums = {}
     for key, h in d.items():
-        checksums[key] = hashutil.hash_to_hex(h)
+        if isinstance(h, bytes):
+            checksums[key] = hashutil.hash_to_hex(h)
+        else:
+            checksums[key] = h
 
     return checksums
 
