@@ -34,7 +34,7 @@ def produce_archive_messages_from(
 
     """
 
-    limit = conf['limit']
+    limit = conf.get('limit')
     block = int(conf['block_messages'])
     count = 0
 

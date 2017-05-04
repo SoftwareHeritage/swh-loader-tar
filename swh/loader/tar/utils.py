@@ -6,7 +6,7 @@
 import itertools
 import random
 
-from swh.core import hashutil
+from swh.model import hashutil
 
 
 def commonname(path0, path1, as_str=False):
@@ -32,7 +32,10 @@ def convert_to_hex(d):
 
     checksums = {}
     for key, h in d.items():
-        checksums[key] = hashutil.hash_to_hex(h)
+        if isinstance(h, bytes):
+            checksums[key] = hashutil.hash_to_hex(h)
+        else:
+            checksums[key] = h
 
     return checksums
 

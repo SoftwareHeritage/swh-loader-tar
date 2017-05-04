@@ -14,7 +14,6 @@ debian/control
 debian/copyright
 debian/rules
 debian/source/format
-resources/create-tarball.ini
 resources/loader/tar.ini
 resources/producer/tar-gnu.ini
 resources/producer/tar-old-gnu.ini
