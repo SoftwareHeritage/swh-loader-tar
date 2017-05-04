@@ -2,7 +2,8 @@ click
 python-dateutil
 retrying
 swh.core>=0.0.14
-swh.loader.dir>=0.0.24
+swh.loader.dir>=0.0.25
+swh.model>=0.0.15
 swh.scheduler
-swh.storage>=0.0.76
+swh.storage>=0.0.83
 vcversioner
