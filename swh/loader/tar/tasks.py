@@ -14,7 +14,7 @@ class LoadTarRepository(Task):
     """
     task_queue = 'swh_loader_tar'
 
-    def run(self, tarpath, origin, visit_date, revision, occurrences):
+    def run_task(self, tarpath, origin, visit_date, revision, occurrences):
         """Import a tarball into swh.
 
         Args:
