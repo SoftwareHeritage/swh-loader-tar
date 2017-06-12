@@ -1,8 +1,9 @@
-swh-loader-tar (0.0.24-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.25-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * Release swh.loader.tar 0.0.25
+  * Update tasks to new swh.scheduler API
 
- -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Thu, 04 May 2017 16:29:50 +0200
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Mon, 12 Jun 2017 18:05:35 +0200
 
 swh-loader-tar (0.0.24-1~swh1) unstable-swh; urgency=medium
 
