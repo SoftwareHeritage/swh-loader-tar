@@ -15,12 +15,18 @@ from swh.model import hashutil
 
 
 class TarLoader(loader.DirLoader):
-    """A tarball loader:
+    """Tarball loader implementation.
 
-    - creates an origin if it does not exist
+    This is a subclass of the :class:DirLoader as the main goal of
+    this class is to first uncompress a tarball, then provide the
+    uncompressed directory/tree to be loaded by the DirLoader.
+
+    This will:
+
+    - creates an origin (if it does not exist)
     - creates a fetch_history entry
     - creates an origin_visit
-    - uncompress locally the tarballs in a temporary location
+    - uncompress locally the tarball in a temporary location
     - process the content of the tarballs to persist on swh storage
     - clean up the temporary location
     - write an entry in fetch_history to mark the loading tarball end (success
