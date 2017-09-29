@@ -1,3 +1,11 @@
+swh-loader-tar (0.0.26-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.26
+  * Bump dependency on swh.loader.dir
+  * Add a one no-persistence test
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 29 Sep 2017 14:26:10 +0200
+
 swh-loader-tar (0.0.25-1~swh1) unstable-swh; urgency=medium
 
   * Release swh.loader.tar 0.0.25
