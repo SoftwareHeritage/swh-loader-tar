@@ -16,37 +16,42 @@ from swh.model import hashutil
 class TarLoader(loader.DirLoader):
     """A tarball loader:
 
-        - creates an origin if it does not exist
-        - creates a fetch_history entry
-        - creates an origin_visit
-        - uncompress locally the tarballs in a temporary location
-        - process the content of the tarballs to persist on swh storage
-        - clean up the temporary location
-        - write an entry in fetch_history to mark the loading tarball end
-        (success or failure)
+    - creates an origin if it does not exist
+    - creates a fetch_history entry
+    - creates an origin_visit
+    - uncompress locally the tarballs in a temporary location
+    - process the content of the tarballs to persist on swh storage
+    - clean up the temporary location
+    - write an entry in fetch_history to mark the loading tarball end (success
+      or failure)
 
-        Args:
-            - tarpath: path to the tarball to uncompress
-            - origin: Dictionary origin
-              - url: url origin we fetched
-              - type: type of the origin
-            - visit_date (str): To override the visit date
-            - revision: Dictionary of information needed, keys are:
-              - author_name: revision's author name
-              - author_email: revision's author email
-              - author_date: timestamp (e.g. 1444054085)
-              - author_offset: date offset e.g. -0220, +0100
-              - committer_name: revision's committer name
-              - committer_email: revision's committer email
-              - committer_date: timestamp
-              - committer_offset: date offset e.g. -0220, +0100
-              - type: type of revision dir, tar
-              - message: synthetic message for the revision
-            - occurrences: List of occurrence dictionary.
-              Information needed, keys are:
-              - branch: occurrence's branch name
-              - authority_id: authority id (e.g. 1 for swh)
-              - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+    Args:
+        tarpath: path to the tarball to uncompress
+        origin (dict): Dictionary with the following keys:
+
+            - url: url origin we fetched
+            - type: type of the origin
+
+        visit_date (str): To override the visit date
+        revision (dict): Dictionary of information needed, keys are:
+
+            - author_name: revision's author name
+            - author_email: revision's author email
+            - author_date: timestamp (e.g. 1444054085)
+            - author_offset: date offset e.g. -0220, +0100
+            - committer_name: revision's committer name
+            - committer_email: revision's committer email
+            - committer_date: timestamp
+            - committer_offset: date offset e.g. -0220, +0100
+            - type: type of revision dir, tar
+            - message: synthetic message for the revision
+
+        occurrences (dict): List of occurrence dictionary, with the following
+            keys:
+
+            - branch: occurrence's branch name
+            - authority_id: authority id (e.g. 1 for swh)
+            - validity: validity date (e.g. 2015-01-01 00:00:00+00)
 
     """
     CONFIG_BASE_FILENAME = 'loader/tar'
