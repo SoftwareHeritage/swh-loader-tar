@@ -172,7 +172,9 @@ class SWHTarLoaderITTest(TestCase):
         }
 
         # when
-        self.loader.load(tarpath, origin, visit_date, revision, [occurrence])
+        self.loader.load(tar_path=tarpath, origin=origin,
+                         visit_date=visit_date, revision=revision,
+                         occurrences=[occurrence])
 
         # then
         self.assertEquals(len(self.loader.all_contents), 8)

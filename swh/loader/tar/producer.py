@@ -53,7 +53,9 @@ def produce_archive_messages_from(
             occurrence = build.compute_occurrence(tarpath)
 
             if not dry_run:
-                task.delay(tarpath, origin, visit_date, revision, [occurrence])
+                task.delay(tar_path=tarpath, origin=origin,
+                           visit_date=visit_date, revision=revision,
+                           occurrences=[occurrence])
 
             count += 1
         except ValueError:

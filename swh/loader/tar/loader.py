@@ -8,6 +8,7 @@ import os
 import tempfile
 import shutil
 
+from swh.loader.core.loader import SWHLoader
 from swh.loader.dir import loader
 from swh.loader.tar import tarball, utils
 from swh.model import hashutil
@@ -24,35 +25,6 @@ class TarLoader(loader.DirLoader):
     - clean up the temporary location
     - write an entry in fetch_history to mark the loading tarball end (success
       or failure)
-
-    Args:
-        tarpath: path to the tarball to uncompress
-        origin (dict): Dictionary with the following keys:
-
-            - url: url origin we fetched
-            - type: type of the origin
-
-        visit_date (str): To override the visit date
-        revision (dict): Dictionary of information needed, keys are:
-
-            - author_name: revision's author name
-            - author_email: revision's author email
-            - author_date: timestamp (e.g. 1444054085)
-            - author_offset: date offset e.g. -0220, +0100
-            - committer_name: revision's committer name
-            - committer_email: revision's committer email
-            - committer_date: timestamp
-            - committer_offset: date offset e.g. -0220, +0100
-            - type: type of revision dir, tar
-            - message: synthetic message for the revision
-
-        occurrences (dict): List of occurrence dictionary, with the following
-            keys:
-
-            - branch: occurrence's branch name
-            - authority_id: authority id (e.g. 1 for swh)
-            - validity: validity date (e.g. 2015-01-01 00:00:00+00)
-
     """
     CONFIG_BASE_FILENAME = 'loader/tar'
 
@@ -63,13 +35,32 @@ class TarLoader(loader.DirLoader):
     def __init__(self):
         super().__init__(logging_class='swh.loader.tar.TarLoader')
 
-    def prepare(self, *args, **kwargs):
+    def load(self, *, tar_path, origin, visit_date, revision, occurrences):
+        """Load a tarball in `tarpath` in the Software Heritage Archive.
+
+        Args:
+            tar_path: tarball to import
+            origin (dict): an origin dictionary as returned by
+              :func:`swh.storage.storage.Storage.origin_get_one`
+            visit_date (str): the date the origin was visited (as an
+              isoformatted string)
+            revision (dict): a revision as passed to
+              :func:`swh.storage.storage.Storage.revision_add`, excluding the
+              `id` and `directory` keys (computed from the directory)
+            occurrences (list of dicts): the occurrences to create in the
+              generated origin visit. Each dict contains a 'branch' key with
+              the branch name as value.
+        """
+        # Shortcut super() as we use different arguments than the DirLoader.
+        SWHLoader.load(self, tar_path=tar_path, origin=origin,
+                       visit_date=visit_date, revision=revision,
+                       occurrences=occurrences)
+
+    def prepare(self, *, tar_path, origin, visit_date, revision, occurrences):
         """1. Uncompress the tarball in a temporary directory.
            2. Compute some metadata to update the revision.
 
         """
-        tarpath, origin, visit_date, revision, occs = args
-
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'
 
@@ -80,21 +71,24 @@ class TarLoader(loader.DirLoader):
                                     dir=extraction_dir)
 
         # add checksums in revision
-        artifact = utils.convert_to_hex(hashutil.hash_path(tarpath))
-        artifact['name'] = os.path.basename(tarpath)
+        artifact = utils.convert_to_hex(hashutil.hash_path(tar_path))
+        artifact['name'] = os.path.basename(tar_path)
 
-        self.log.info('Uncompress %s to %s' % (tarpath, dir_path))
-        nature = tarball.uncompress(tarpath, dir_path)
+        self.log.info('Uncompress %s to %s' % (tar_path, dir_path))
+        nature = tarball.uncompress(tar_path, dir_path)
         artifact['archive_type'] = nature
-        artifact['length'] = os.path.getsize(tarpath)
+        artifact['length'] = os.path.getsize(tar_path)
 
         revision['metadata'] = {
             'original_artifact': [artifact],
         }
 
-        self.dir_path = dir_path
-
-        super().prepare(dir_path, origin, visit_date, revision, None, occs)
+        super().prepare(dir_path=dir_path,
+                        origin=origin,
+                        visit_date=visit_date,
+                        revision=revision,
+                        release=None,
+                        occurrences=occurrences)
 
     def cleanup(self):
         """Clean up temporary directory where we uncompress the tarball.
