@@ -4,10 +4,10 @@
 # See top-level LICENSE file for more information
 
 import os
-
-
-from nose.tools import istest
 from unittest import TestCase
+
+from nose.plugins.attrib import attr
+from nose.tools import istest
 
 from swh.loader.tar.loader import TarLoader
 
@@ -119,6 +119,7 @@ class SWHTarLoaderITTest(TestCase):
 
         self.loader = SWHTarLoaderNoStorage()
 
+    @attr('fs')
     @istest
     def load(self):
         """Process a new tarball should be ok
@@ -172,16 +173,20 @@ class SWHTarLoaderITTest(TestCase):
         }
 
         # when
-        self.loader.load(tarpath, origin, visit_date, revision, [occurrence])
+        self.loader.load(tar_path=tarpath, origin=origin,
+                         visit_date=visit_date, revision=revision,
+                         occurrences=[occurrence])
 
         # then
-        self.assertEquals(len(self.loader.all_contents), 8)
-        self.assertEquals(len(self.loader.all_directories), 6)
-        self.assertEquals(len(self.loader.all_revisions), 1)
+        self.assertEquals(len(self.loader.all_contents), 8,
+                          "8 contents: 3 files + 5 links")
+        self.assertEquals(len(self.loader.all_directories), 6,
+                          "6 directories: 4 subdirs + 1 empty + 1 main dir")
+        self.assertEquals(len(self.loader.all_revisions), 1,
+                          "synthetic revision")
 
         actual_revision = self.loader.all_revisions[0]
-        self.assertEquals(actual_revision['synthetic'],
-                          True)
+        self.assertTrue(actual_revision['synthetic'])
         self.assertEquals(actual_revision['parents'],
                           [])
         self.assertEquals(actual_revision['type'],
@@ -189,7 +194,7 @@ class SWHTarLoaderITTest(TestCase):
         self.assertEquals(actual_revision['message'],
                           b'swh-loader-tar: synthetic revision message')
         self.assertEquals(actual_revision['directory'],
-                          b'\x18U\xe5?K\x98,\xdb&9\x0f\xd3/h\xf5{\xfb,\xc3\xd5')  # noqa
+                          b'\xa7A\xfcM\x96\x8c{\x8e<\x94\xff\x86\xe7\x04\x80\xc5\xc7\xe5r\xa9')  # noqa
 
         self.assertEquals(
             actual_revision['metadata']['original_artifact'][0],
