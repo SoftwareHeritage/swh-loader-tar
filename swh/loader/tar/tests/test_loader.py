@@ -4,10 +4,10 @@
 # See top-level LICENSE file for more information
 
 import os
-
-
-from nose.tools import istest
 from unittest import TestCase
+
+from nose.plugins.attrib import attr
+from nose.tools import istest
 
 from swh.loader.tar.loader import TarLoader
 
@@ -119,6 +119,7 @@ class SWHTarLoaderITTest(TestCase):
 
         self.loader = SWHTarLoaderNoStorage()
 
+    @attr('fs')
     @istest
     def load(self):
         """Process a new tarball should be ok
