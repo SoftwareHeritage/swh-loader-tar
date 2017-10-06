@@ -1,3 +1,10 @@
+swh-loader-tar (0.0.27-1~swh1) unstable-swh; urgency=medium
+
+  * Release swh.loader.tar v0.0.27
+  * Update to new swh.loader.core
+
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Fri, 06 Oct 2017 15:11:40 +0200
+
 swh-loader-tar (0.0.26-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.26
