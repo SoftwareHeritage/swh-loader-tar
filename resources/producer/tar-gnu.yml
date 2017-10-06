@@ -1,5 +1,5 @@
 # Mirror's root directory holding tarballs to load into swh
-mirror_root_directory: /home/storage/space/mirrors/gnu.org/gnu/
+mirror_root_directory: /srv/softwareheritage/space/mirrors/gnu.org/gnu/
 
 # Origin setup's possible scheme url
 url_scheme: rsync://ftp.gnu.org/gnu/

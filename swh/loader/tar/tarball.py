@@ -1,9 +1,10 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
 import os
+import stat
 import tarfile
 import zipfile
 
@@ -167,7 +168,9 @@ def uncompress(tarpath, dest):
         for fname in fnames:
             fpath = os.path.join(dirpath, fname)
             if not os.path.islink(fpath):
-                os.chmod(fpath, 0o644)
+                fpath_exec = os.stat(fpath).st_mode & stat.S_IXUSR
+                if not fpath_exec:
+                    os.chmod(fpath, 0o644)
 
     return nature
 
