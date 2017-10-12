@@ -22,11 +22,13 @@ docs/_static/.placeholder
 docs/_templates/.placeholder
 resources/producer/tar-gnu.yml
 resources/producer/tar-old-gnu.yml
+swh/__init__.py
 swh.loader.tar.egg-info/PKG-INFO
 swh.loader.tar.egg-info/SOURCES.txt
 swh.loader.tar.egg-info/dependency_links.txt
 swh.loader.tar.egg-info/requires.txt
 swh.loader.tar.egg-info/top_level.txt
+swh/loader/__init__.py
 swh/loader/tar/__init__.py
 swh/loader/tar/build.py
 swh/loader/tar/db.py
