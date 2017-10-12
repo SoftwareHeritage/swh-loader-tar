@@ -1,3 +1,10 @@
+swh-loader-tar (0.0.28-1~swh1) unstable-swh; urgency=medium
+
+  * Release swh.loader.tar version 0.0.28
+  * Update packaging runes
+
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Thu, 12 Oct 2017 18:07:58 +0200
+
 swh-loader-tar (0.0.27-1~swh1) unstable-swh; urgency=medium
 
   * Release swh.loader.tar v0.0.27
