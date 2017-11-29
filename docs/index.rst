@@ -1,3 +1,5 @@
+.. _swh-loader-tar:
+
 Software Heritage - Development Documentation
 =============================================
 

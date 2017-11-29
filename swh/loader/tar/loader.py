@@ -38,8 +38,8 @@ class TarLoader(loader.DirLoader):
         'extraction_dir': ('string', '/tmp')
     }
 
-    def __init__(self):
-        super().__init__(logging_class='swh.loader.tar.TarLoader')
+    def __init__(self, logging_class='swh.loader.tar.TarLoader', config=None):
+        super().__init__(logging_class=logging_class, config=config)
 
     def load(self, *, tar_path, origin, visit_date, revision, occurrences):
         """Load a tarball in `tarpath` in the Software Heritage Archive.
