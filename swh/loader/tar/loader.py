@@ -77,17 +77,18 @@ class TarLoader(loader.DirLoader):
                                     dir=extraction_dir)
 
         # add checksums in revision
-        artifact = utils.convert_to_hex(hashutil.hash_path(tar_path))
-        artifact['name'] = os.path.basename(tar_path)
 
         self.log.info('Uncompress %s to %s' % (tar_path, dir_path))
         nature = tarball.uncompress(tar_path, dir_path)
-        artifact['archive_type'] = nature
-        artifact['length'] = os.path.getsize(tar_path)
 
-        revision['metadata'] = {
-            'original_artifact': [artifact],
-        }
+        if 'metadata' not in revision:
+            artifact = utils.convert_to_hex(hashutil.hash_path(tar_path))
+            artifact['name'] = os.path.basename(tar_path)
+            artifact['archive_type'] = nature
+            artifact['length'] = os.path.getsize(tar_path)
+            revision['metadata'] = {
+                'original_artifact': [artifact],
+            }
 
         super().prepare(dir_path=dir_path,
                         origin=origin,
