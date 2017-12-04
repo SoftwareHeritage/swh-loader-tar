@@ -164,7 +164,6 @@ class SWHTarLoaderITTest(TestCase):
             'committer': swh_person,
             'type': revision_type,
             'message': revision_message,
-            'metadata': {},
             'synthetic': True,
         }
 
