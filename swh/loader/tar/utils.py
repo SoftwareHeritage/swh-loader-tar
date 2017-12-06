@@ -9,13 +9,6 @@ import random
 from swh.model import hashutil
 
 
-def commonname(path0, path1, as_str=False):
-    """Compute the commonname between the path0 and path1.
-
-    """
-    return path1.split(path0)[1]
-
-
 def convert_to_hex(d):
     """Convert a flat dictionary with bytes in values to the same dictionary
     with hex as values.

@@ -5,7 +5,7 @@
 
 import os
 
-from swh.loader.tar import utils
+from swh.core import utils
 
 
 # Static setup
