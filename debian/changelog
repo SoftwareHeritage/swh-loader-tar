@@ -1,3 +1,10 @@
+swh-loader-tar (0.0.32-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.32
+  * Migrate to latest swh-core
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 06 Dec 2017 12:04:02 +0100
+
 swh-loader-tar (0.0.31-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.31
