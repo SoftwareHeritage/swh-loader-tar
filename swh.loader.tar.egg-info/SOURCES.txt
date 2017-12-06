@@ -35,7 +35,6 @@ swh/loader/tar/db.py
 swh/loader/tar/file.py
 swh/loader/tar/loader.py
 swh/loader/tar/producer.py
-swh/loader/tar/tarball.py
 swh/loader/tar/tasks.py
 swh/loader/tar/utils.py
 swh/loader/tar/tests/test_build.py
