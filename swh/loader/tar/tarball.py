@@ -12,7 +12,7 @@ from os.path import abspath, realpath, join, dirname
 from swh.loader.tar import utils
 
 
-def canonical_abspath(path):
+def _canonical_abspath(path):
     """Resolve all paths to an absolute and real one.
 
     Args:
@@ -25,7 +25,7 @@ def canonical_abspath(path):
     return realpath(abspath(path))
 
 
-def badpath(path, basepath):
+def _badpath(path, basepath):
     """Determine if a path is outside basepath.
 
     Args:
@@ -36,10 +36,10 @@ def badpath(path, basepath):
         True if path is outside basepath, false otherwise.
 
     """
-    return not canonical_abspath(join(basepath, path)).startswith(basepath)
+    return not _canonical_abspath(join(basepath, path)).startswith(basepath)
 
 
-def badlink(info, basepath):
+def _badlink(info, basepath):
     """Determine if the tarinfo member is outside basepath.
 
     Args:
@@ -50,8 +50,8 @@ def badlink(info, basepath):
         True if info is outside basepath, false otherwise.
 
     """
-    tippath = canonical_abspath(join(basepath, dirname(info.name)))
-    return badpath(info.linkname, basepath=tippath)
+    tippath = _canonical_abspath(join(basepath, dirname(info.name)))
+    return _badpath(info.linkname, basepath=tippath)
 
 
 def is_tarball(filepath):
@@ -115,14 +115,14 @@ def _uncompress_tar(tarpath, dirpath):
         errormsg = 'Archive {} blocked. Illegal path to %s %s'.format(tarpath)
 
         for finfo in members:
-            if finfo.isdir() and badpath(finfo.name, basepath):
+            if finfo.isdir() and _badpath(finfo.name, basepath):
                 raise ValueError(errormsg % ('directory', finfo.name))
-            elif finfo.isfile() and badpath(finfo.name, basepath):
+            elif finfo.isfile() and _badpath(finfo.name, basepath):
                 raise ValueError(errormsg % ('file', finfo.name))
-            elif finfo.islnk() and badlink(finfo, basepath):
+            elif finfo.islnk() and _badlink(finfo, basepath):
                 raise ValueError(errormsg % ('hard-link', finfo.linkname))
             # Authorize symlinks to point outside basepath
-            # elif finfo.issym() and badlink(finfo, basepath):
+            # elif finfo.issym() and _badlink(finfo, basepath):
             #     raise ValueError(errormsg % ('symlink', finfo.linkname))
             else:
                 yield finfo
@@ -175,7 +175,7 @@ def uncompress(tarpath, dest):
     return nature
 
 
-def ls(rootdir):
+def _ls(rootdir):
     """Generator of filepath, filename from rootdir.
 
     """
@@ -215,7 +215,7 @@ def compress(tarpath, nature, dirpath_or_files):
 
     """
     if isinstance(dirpath_or_files, str):
-        files = ls(dirpath_or_files)
+        files = _ls(dirpath_or_files)
     else:  # iterable of 'filepath, filename'
         files = dirpath_or_files
 
