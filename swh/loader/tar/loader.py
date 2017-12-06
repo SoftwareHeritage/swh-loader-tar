@@ -8,9 +8,10 @@ import os
 import tempfile
 import shutil
 
+from swh.core import tarball
 from swh.loader.core.loader import SWHLoader
 from swh.loader.dir import loader
-from swh.loader.tar import tarball, utils
+from swh.loader.tar import utils
 from swh.model import hashutil
 
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -11,20 +11,6 @@ from swh.loader.tar import utils
 
 
 class TestUtils(unittest.TestCase):
-    @istest
-    def commonname(self):
-        # when
-        actual_commonname = utils.commonname('/some/where/to/',
-                                             '/some/where/to/go/to')
-        # then
-        self.assertEquals('go/to', actual_commonname)
-
-        # when
-        actual_commonname2 = utils.commonname(b'/some/where/to/',
-                                              b'/some/where/to/go/to')
-        # then
-        self.assertEquals(b'go/to', actual_commonname2)
-
     @istest
     def convert_to_hex(self):
         # given

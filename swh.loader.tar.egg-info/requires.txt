@@ -1,7 +1,7 @@
 click
 python-dateutil
 retrying
-swh.core>=0.0.14
+swh.core>=0.0.36
 swh.loader.dir>=0.0.30
 swh.model>=0.0.15
 swh.scheduler>=0.0.14

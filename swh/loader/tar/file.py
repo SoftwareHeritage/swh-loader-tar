@@ -1,4 +1,4 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -6,7 +6,8 @@
 import itertools
 import os
 
-from swh.loader.tar import tarball, utils
+from swh.core import tarball
+from swh.loader.tar import utils
 
 
 def archives_from_dir(path):
