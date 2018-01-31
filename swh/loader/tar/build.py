@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -40,21 +40,6 @@ def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
         'url': ''.join([url_scheme,
                         os.path.dirname(relative_path)]),
         'type': url_type,
-    }
-
-
-def compute_occurrence(tarpath):
-    """Compute the occurrence using the tarpath's ctime.
-
-    Args:
-        tarpath: file's path
-
-    Returns:
-        Occurrence dictionary.
-
-    """
-    return {
-        'branch': os.path.basename(tarpath),
     }
 
 
