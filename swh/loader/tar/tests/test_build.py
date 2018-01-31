@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -29,20 +29,6 @@ class TestBuildUtils(unittest.TestCase):
 
         # then
         self.assertEquals(actual_origin, expected_origin)
-
-    @istest
-    def compute_occurrence(self):
-        # given
-        expected_occurrence = {
-            'branch': b'package-bar.tgz',
-        }
-
-        # when
-        actual_occurrence = build.compute_occurrence(
-            b'/path/to/package-bar.tgz')
-
-        # then
-        self.assertEquals(actual_occurrence, expected_occurrence)
 
     @patch('swh.loader.tar.build._time_from_path')
     @istest

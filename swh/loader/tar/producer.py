@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -50,12 +50,11 @@ def produce_archive_messages_from(
             origin = build.compute_origin(
                 conf['url_scheme'], conf['type'], root_dir, tarpath)
             revision = build.compute_revision(tarpath)
-            occurrence = build.compute_occurrence(tarpath)
 
             if not dry_run:
                 task.delay(tar_path=tarpath, origin=origin,
-                           visit_date=visit_date, revision=revision,
-                           occurrences=[occurrence])
+                           visit_date=visit_date,
+                           revision=revision)
 
             count += 1
         except ValueError:
