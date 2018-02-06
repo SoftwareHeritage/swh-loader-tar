@@ -68,7 +68,7 @@ def random_blocks(iterable, block=100, fillvalue=None):
     count = 0
     for iterable in grouper(iterable, block, fillvalue=fillvalue):
         count += 1
-        l = list(iterable)
-        random.shuffle(l)
-        for e in l:
+        lst = list(iterable)
+        random.shuffle(lst)
+        for e in lst:
             yield e
