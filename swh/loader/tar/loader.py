@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -59,9 +59,9 @@ class TarLoader(loader.DirLoader):
               the branch name as value.
         """
         # Shortcut super() as we use different arguments than the DirLoader.
-        SWHLoader.load(self, tar_path=tar_path, origin=origin,
-                       visit_date=visit_date, revision=revision,
-                       occurrences=occurrences)
+        return SWHLoader.load(self, tar_path=tar_path, origin=origin,
+                              visit_date=visit_date, revision=revision,
+                              occurrences=occurrences)
 
     def prepare(self, *, tar_path, origin, visit_date, revision, occurrences):
         """1. Uncompress the tarball in a temporary directory.
