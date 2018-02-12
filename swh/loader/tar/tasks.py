@@ -14,7 +14,8 @@ class LoadTarRepository(Task):
     """
     task_queue = 'swh_loader_tar'
 
-    def run_task(self, *, tar_path, origin, visit_date, revision, occurrences):
+    def run_task(self, *, tar_path, origin, visit_date, revision,
+                 branch_name=None):
         """Import a tarball into swh.
 
         Args: see :func:`TarLoader.load`.
@@ -23,4 +24,4 @@ class LoadTarRepository(Task):
         loader.log = self.log
         return loader.load(tar_path=tar_path, origin=origin,
                            visit_date=visit_date, revision=revision,
-                           occurrences=occurrences)
+                           branch_name=branch_name)
