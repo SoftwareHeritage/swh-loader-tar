@@ -42,7 +42,8 @@ class TarLoader(loader.DirLoader):
     def __init__(self, logging_class='swh.loader.tar.TarLoader', config=None):
         super().__init__(logging_class=logging_class, config=config)
 
-    def load(self, *, tar_path, origin, visit_date, revision, occurrences):
+    def load(self, *, tar_path, origin, visit_date, revision,
+             branch_name=None):
         """Load a tarball in `tarpath` in the Software Heritage Archive.
 
         Args:
@@ -54,16 +55,16 @@ class TarLoader(loader.DirLoader):
             revision (dict): a revision as passed to
               :func:`swh.storage.storage.Storage.revision_add`, excluding the
               `id` and `directory` keys (computed from the directory)
-            occurrences (list of dicts): the occurrences to create in the
-              generated origin visit. Each dict contains a 'branch' key with
-              the branch name as value.
+            branch_name (str): the optional branch_name to use for snapshot
+
         """
         # Shortcut super() as we use different arguments than the DirLoader.
         return SWHLoader.load(self, tar_path=tar_path, origin=origin,
                               visit_date=visit_date, revision=revision,
-                              occurrences=occurrences)
+                              branch_name=branch_name)
 
-    def prepare(self, *, tar_path, origin, visit_date, revision, occurrences):
+    def prepare(self, *, tar_path, origin, visit_date, revision,
+                branch_name=None):
         """1. Uncompress the tarball in a temporary directory.
            2. Compute some metadata to update the revision.
 
@@ -91,12 +92,14 @@ class TarLoader(loader.DirLoader):
                 'original_artifact': [artifact],
             }
 
+        branch = branch_name if branch_name else os.path.basename(tar_path)
+
         super().prepare(dir_path=dir_path,
                         origin=origin,
                         visit_date=visit_date,
                         revision=revision,
                         release=None,
-                        occurrences=occurrences)
+                        branch_name=branch)
 
     def cleanup(self):
         """Clean up temporary directory where we uncompress the tarball.
