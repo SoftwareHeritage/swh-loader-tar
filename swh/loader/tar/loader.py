@@ -111,3 +111,44 @@ class TarLoader(loader.DirLoader):
         dir_path = self.dir_path
         if dir_path and os.path.exists(dir_path):
             shutil.rmtree(dir_path)
+
+
+if __name__ == '__main__':
+    import click
+    import logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(process)d %(message)s'
+    )
+
+    @click.command()
+    @click.option('--archive-path', required=1, help='Archive path to load')
+    @click.option('--origin-url', required=1, help='Origin url to associate')
+    @click.option('--visit-date', default=None,
+                  help='Visit date time override')
+    def main(archive_path, origin_url, visit_date):
+        """Loading archive tryout."""
+        import datetime
+        origin = {'url': origin_url, 'type': 'tar'}
+        commit_time = int(datetime.datetime.now(
+            tz=datetime.timezone.utc).timestamp())
+        swh_person = {
+            'name': 'Software Heritage',
+            'fullname': 'Software Heritage',
+            'email': 'robot@softwareheritage.org'
+        }
+        revision = {
+            'date': {'timestamp': commit_time, 'offset': 0},
+            'committer_date': {'timestamp': commit_time, 'offset': 0},
+            'author': swh_person,
+            'committer': swh_person,
+            'type': 'tar',
+            'message': 'swh-loader-tar: synthetic revision message',
+            'metadata': {},
+            'synthetic': True,
+        }
+        TarLoader().load(tar_path=archive_path, origin=origin,
+                         visit_date=visit_date, revision=revision,
+                         branch_name='master')
+
+    main()
