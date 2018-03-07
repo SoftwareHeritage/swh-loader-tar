@@ -64,13 +64,13 @@ class TarLoader(loader.DirLoader):
                               visit_date=visit_date, revision=revision,
                               branch_name=branch_name)
 
-    def prepare_origin_visit(self, *, origin, visit_date, **kwargs):
+    def prepare_origin_visit(self, *, origin, visit_date=None, **kwargs):
         self.origin = origin
         if 'type' not in self.origin:  # let the type flow if present
             self.origin['type'] = 'tar'
         self.visit_date = visit_date
 
-    def prepare(self, *, tar_path, origin, visit_date, revision,
+    def prepare(self, *, tar_path, origin, revision, visit_date=None,
                 branch_name=None):
         """1. Uncompress the tarball in a temporary directory.
            2. Compute some metadata to update the revision.
