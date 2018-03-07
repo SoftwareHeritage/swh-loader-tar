@@ -41,6 +41,7 @@ class TarLoader(loader.DirLoader):
 
     def __init__(self, logging_class='swh.loader.tar.TarLoader', config=None):
         super().__init__(logging_class=logging_class, config=config)
+        self.dir_path = None
 
     def load(self, *, tar_path, origin, visit_date, revision,
              branch_name=None):
@@ -63,25 +64,28 @@ class TarLoader(loader.DirLoader):
                               visit_date=visit_date, revision=revision,
                               branch_name=branch_name)
 
-    def prepare(self, *, tar_path, origin, visit_date, revision,
+    def prepare_origin_visit(self, *, origin, visit_date=None, **kwargs):
+        self.origin = origin
+        if 'type' not in self.origin:  # let the type flow if present
+            self.origin['type'] = 'tar'
+        self.visit_date = visit_date
+
+    def prepare(self, *, tar_path, origin, revision, visit_date=None,
                 branch_name=None):
         """1. Uncompress the tarball in a temporary directory.
            2. Compute some metadata to update the revision.
 
         """
-        if 'type' not in origin:  # let the type flow if present
-            origin['type'] = 'tar'
-
         # Prepare the extraction path
         extraction_dir = self.config['extraction_dir']
         os.makedirs(extraction_dir, 0o755, exist_ok=True)
-        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
-                                    dir=extraction_dir)
+        self.dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
+                                         dir=extraction_dir)
 
         # add checksums in revision
 
-        self.log.info('Uncompress %s to %s' % (tar_path, dir_path))
-        nature = tarball.uncompress(tar_path, dir_path)
+        self.log.info('Uncompress %s to %s' % (tar_path, self.dir_path))
+        nature = tarball.uncompress(tar_path, self.dir_path)
 
         if 'metadata' not in revision:
             artifact = utils.convert_to_hex(hashutil.hash_path(tar_path))
@@ -94,7 +98,7 @@ class TarLoader(loader.DirLoader):
 
         branch = branch_name if branch_name else os.path.basename(tar_path)
 
-        super().prepare(dir_path=dir_path,
+        super().prepare(dir_path=self.dir_path,
                         origin=origin,
                         visit_date=visit_date,
                         revision=revision,
@@ -105,6 +109,46 @@ class TarLoader(loader.DirLoader):
         """Clean up temporary directory where we uncompress the tarball.
 
         """
-        dir_path = self.dir_path
-        if dir_path and os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
+        if self.dir_path and os.path.exists(self.dir_path):
+            shutil.rmtree(self.dir_path)
+
+
+if __name__ == '__main__':
+    import click
+    import logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(process)d %(message)s'
+    )
+
+    @click.command()
+    @click.option('--archive-path', required=1, help='Archive path to load')
+    @click.option('--origin-url', required=1, help='Origin url to associate')
+    @click.option('--visit-date', default=None,
+                  help='Visit date time override')
+    def main(archive_path, origin_url, visit_date):
+        """Loading archive tryout."""
+        import datetime
+        origin = {'url': origin_url, 'type': 'tar'}
+        commit_time = int(datetime.datetime.now(
+            tz=datetime.timezone.utc).timestamp())
+        swh_person = {
+            'name': 'Software Heritage',
+            'fullname': 'Software Heritage',
+            'email': 'robot@softwareheritage.org'
+        }
+        revision = {
+            'date': {'timestamp': commit_time, 'offset': 0},
+            'committer_date': {'timestamp': commit_time, 'offset': 0},
+            'author': swh_person,
+            'committer': swh_person,
+            'type': 'tar',
+            'message': 'swh-loader-tar: synthetic revision message',
+            'metadata': {},
+            'synthetic': True,
+        }
+        TarLoader().load(tar_path=archive_path, origin=origin,
+                         visit_date=visit_date, revision=revision,
+                         branch_name='master')
+
+    main()
