@@ -63,11 +63,11 @@ class TarLoader(loader.DirLoader):
                               visit_date=visit_date, revision=revision,
                               branch_name=branch_name)
 
-    def prepare_origin(self, *args, **kwargs):
-        self.origin = kwargs['origin']
+    def prepare_origin_visit(self, *, origin, visit_date, **kwargs):
+        self.origin = origin
         if 'type' not in self.origin:  # let the type flow if present
             self.origin['type'] = 'tar'
-        return super().prepare_origin(*args, **kwargs)
+        self.visit_date = visit_date
 
     def prepare(self, *, tar_path, origin, visit_date, revision,
                 branch_name=None):
