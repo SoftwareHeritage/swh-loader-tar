@@ -41,6 +41,7 @@ class TarLoader(loader.DirLoader):
 
     def __init__(self, logging_class='swh.loader.tar.TarLoader', config=None):
         super().__init__(logging_class=logging_class, config=config)
+        self.dir_path = None
 
     def load(self, *, tar_path, origin, visit_date, revision,
              branch_name=None):
@@ -78,13 +79,13 @@ class TarLoader(loader.DirLoader):
         # Prepare the extraction path
         extraction_dir = self.config['extraction_dir']
         os.makedirs(extraction_dir, 0o755, exist_ok=True)
-        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
-                                    dir=extraction_dir)
+        self.dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
+                                         dir=extraction_dir)
 
         # add checksums in revision
 
-        self.log.info('Uncompress %s to %s' % (tar_path, dir_path))
-        nature = tarball.uncompress(tar_path, dir_path)
+        self.log.info('Uncompress %s to %s' % (tar_path, self.dir_path))
+        nature = tarball.uncompress(tar_path, self.dir_path)
 
         if 'metadata' not in revision:
             artifact = utils.convert_to_hex(hashutil.hash_path(tar_path))
@@ -97,7 +98,7 @@ class TarLoader(loader.DirLoader):
 
         branch = branch_name if branch_name else os.path.basename(tar_path)
 
-        super().prepare(dir_path=dir_path,
+        super().prepare(dir_path=self.dir_path,
                         origin=origin,
                         visit_date=visit_date,
                         revision=revision,
@@ -108,9 +109,8 @@ class TarLoader(loader.DirLoader):
         """Clean up temporary directory where we uncompress the tarball.
 
         """
-        dir_path = self.dir_path
-        if dir_path and os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
+        if self.dir_path and os.path.exists(self.dir_path):
+            shutil.rmtree(self.dir_path)
 
 
 if __name__ == '__main__':
