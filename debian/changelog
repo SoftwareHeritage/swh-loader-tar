@@ -1,8 +1,11 @@
-swh-loader-tar (0.0.34-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-tar (0.0.35-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.35
+  * Improve origin_visit initialization step
+  * Properly sandbox the prepare statement so that if it breaks, we can
+  * update appropriately the visit with the correct status
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 12 Feb 2018 11:17:17 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 07 Mar 2018 12:00:13 +0100
 
 swh-loader-tar (0.0.34-1~swh1) unstable-swh; urgency=medium
 
