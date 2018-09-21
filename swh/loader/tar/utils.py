@@ -6,32 +6,6 @@
 import itertools
 import random
 
-from swh.model import hashutil
-
-
-def convert_to_hex(d):
-    """Convert a flat dictionary with bytes in values to the same dictionary
-    with hex as values.
-
-    Args:
-        dict: flat dictionary with sha bytes in their values.
-
-    Returns:
-        Mirror dictionary with values as string hex.
-
-    """
-    if not d:
-        return d
-
-    checksums = {}
-    for key, h in d.items():
-        if isinstance(h, bytes):
-            checksums[key] = hashutil.hash_to_hex(h)
-        else:
-            checksums[key] = h
-
-    return checksums
-
 
 def grouper(iterable, n, fillvalue=None):
     """Collect data into fixed-length chunks or blocks.

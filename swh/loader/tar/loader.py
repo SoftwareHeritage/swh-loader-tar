@@ -11,8 +11,7 @@ import shutil
 from swh.core import tarball
 from swh.loader.core.loader import SWHLoader
 from swh.loader.dir import loader
-from swh.loader.tar import utils
-from swh.model import hashutil
+from swh.model.hashutil import MultiHash
 
 
 class TarLoader(loader.DirLoader):
@@ -88,7 +87,7 @@ class TarLoader(loader.DirLoader):
         nature = tarball.uncompress(tar_path, self.dir_path)
 
         if 'metadata' not in revision:
-            artifact = utils.convert_to_hex(hashutil.hash_path(tar_path))
+            artifact = MultiHash.from_path(tar_path).hexdigest()
             artifact['name'] = os.path.basename(tar_path)
             artifact['archive_type'] = nature
             artifact['length'] = os.path.getsize(tar_path)
