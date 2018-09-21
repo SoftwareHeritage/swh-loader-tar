@@ -23,17 +23,26 @@ storage:
 Load tarball directly from code or python3's toplevel:
 
 ``` Python
-    from swh.loader.tar.tasks import LoadTarRepository
+# Fill in those
+repo = 'loader-tar.tgz'
+tarpath = '/home/storage/tar/%s' % repo
+origin = {'url': 'ftp://%s' % repo, 'type': 'tar'}
+visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
+revision = {
+    'author': {'name': 'some', 'fullname': 'one', 'email': 'something'},
+    'committer': {'name': 'some', 'fullname': 'one', 'email': 'something'},
+    'message': '1.0 Released',
+    'date': None,
+    'committer_date': None,
+    'type': 'tar',
+}
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-    # Fill in those
-    tarpath = '/some/path/to/blah-7.8.3.tgz'
-    origin = {'url': 'some-origin', 'type': 'dir'}
-    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
-    revision = {}
-    occurrence = {}
-
-    # Send message to the task queue
-    LoadTarRepository().run((tarpath, origin, visit_date, revision, [occurrence]))
+from swh.loader.tar.tasks import LoadTarRepository
+l = LoadTarRepository()
+l.run_task(tar_path=tarpath, origin=origin, visit_date=visit_date,
+           revision=revision, branch_name='master')
 ```
 
 ## Celery
