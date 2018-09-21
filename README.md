@@ -13,28 +13,9 @@ This is the loader's (or task's) configuration file.
 ```YAML
 extraction_dir: /home/storage/tmp/
 storage:
-  cls: local
+  cls: remote
   args:
-    db: service=swh-dev
-    objstorage:
-      cls: pathslicing
-      args:
-        root: /home/storage/swh-storage
-        slicing: 0:2/2:4/4:6
-
-send_contents: True
-send_directories: True
-send_revisions: True
-send_releases: True
-send_occurrences: True
-
-content_packet_size: 10000
-content_packet_block_size_bytes: 104857600
-content_packet_size_bytes: 1073741824
-directory_packet_size: 25000
-revision_packet_size: 100000
-release_packet_size: 100000
-occurrence_packet_size: 100000
+    url: http://localhost:5002/
 ```
 
 ## API
