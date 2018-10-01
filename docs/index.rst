@@ -1,13 +1,17 @@
 .. _swh-loader-tar:
 
-Software Heritage - Development Documentation
-=============================================
+Software Heritage - Tar loader
+==============================
+
+Loader for source code archives (including tarballs, zip, and other formats).
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    README.md
+
 
 Indices and tables
 ==================
