@@ -111,7 +111,7 @@ be computed from such file (the `mirror_root_directory` is still used
 so please be consistent).
 
 If problem arises during tarball message computation, a message will
-be outputed with the tarball that present a problem.
+be output with the tarball that present a problem.
 
 It will displayed the number of tarball messages sent at the end.
 
