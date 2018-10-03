@@ -10,62 +10,20 @@ from nose.plugins.attrib import attr
 from nose.tools import istest
 
 from swh.loader.tar.loader import TarLoader
+from swh.loader.core.tests import LoaderNoStorage, BaseLoaderTest
 
 
-class LoaderNoStorageForTest:
-    """Mixin class to inhibit the persistence and keep in memory the data
-    sent for storage.
+class TarLoaderNoStorage(LoaderNoStorage, TarLoader):
+    """A DirLoader with no persistence.
 
-    cf. SWHTarLoaderNoStorage
+    Context:
+        Load a tarball with a persistent-less tarball loader
 
     """
-    def __init__(self):
-        super().__init__()
-        # Init the state
-        self.all_contents = []
-        self.all_directories = []
-        self.all_revisions = []
-        self.all_releases = []
-        self.all_snapshots = []
-
-    def send_origin(self, origin):
-        self.origin = origin
-
-    def send_origin_visit(self, origin_id, ts):
-        self.origin_visit = {
-            'origin': origin_id,
-            'ts': ts,
-            'visit': 1,
-        }
-        return self.origin_visit
-
-    def update_origin_visit(self, origin_id, visit, status):
-        self.status = status
-        self.origin_visit = visit
-
-    def maybe_load_contents(self, all_contents):
-        self.all_contents.extend(all_contents)
-
-    def maybe_load_directories(self, all_directories):
-        self.all_directories.extend(all_directories)
-
-    def maybe_load_revisions(self, all_revisions):
-        self.all_revisions.extend(all_revisions)
-
-    def maybe_load_releases(self, releases):
-        self.all_releases.extend(releases)
-
-    def maybe_load_snapshot(self, snapshot):
-        self.all_snapshots.append(snapshot)
-
-    def open_fetch_history(self):
-        return 1
-
-    def close_fetch_history_success(self, fetch_history_id):
-        pass
-
-    def close_fetch_history_failure(self, fetch_history_id):
-        pass
+    def __init__(self, config={}):
+        super().__init__(config=config)
+        self.origin_id = 1
+        self.visit = 1
 
 
 TEST_CONFIG = {
@@ -99,24 +57,10 @@ def parse_config_file(base_filename=None, config_filename=None,
 TarLoader.parse_config_file = parse_config_file
 
 
-class SWHTarLoaderNoStorage(LoaderNoStorageForTest, TarLoader):
-    """A TarLoader with no persistence.
-
-    Context:
-        Load a tarball with a persistent-less tarball loader
-
-    """
-    pass
-
-
-PATH_TO_DATA = '../../../../..'
-
-
-class SWHTarLoaderITTest(TestCase):
+class TarLoaderTest1(TestCase):
     def setUp(self):
         super().setUp()
-
-        self.loader = SWHTarLoaderNoStorage()
+        self.loader = TarLoaderNoStorage()
 
     @attr('fs')
     @istest
@@ -126,9 +70,7 @@ class SWHTarLoaderITTest(TestCase):
         """
         # given
         start_path = os.path.dirname(__file__)
-        tarpath = os.path.join(
-            start_path, PATH_TO_DATA,
-            'swh-storage-testdata/dir-folders/sample-folder.tgz')
+        tarpath = os.path.join(start_path, 'resources', 'sample-folder.tgz')
 
         origin = {
             'url': 'file:///tmp/sample-folder',
