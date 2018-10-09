@@ -57,7 +57,18 @@ def parse_config_file(base_filename=None, config_filename=None,
 TarLoader.parse_config_file = parse_config_file
 
 
-class TarLoaderTest1(TestCase):
+class TarLoaderTest(BaseLoaderTest):
+    """Prepare the archive to load
+
+    """
+    def setUp(self):
+        super().setUp('sample-folder.tgz',
+                      start_path=os.path.dirname(__file__),
+                      uncompress_archive=False)
+        self.tarpath = self.destination_path
+
+
+class TarLoaderTest1(TarLoaderTest):
     def setUp(self):
         super().setUp()
         self.loader = TarLoaderNoStorage()
@@ -69,9 +80,6 @@ class TarLoaderTest1(TestCase):
 
         """
         # given
-        start_path = os.path.dirname(__file__)
-        tarpath = os.path.join(start_path, 'resources', 'sample-folder.tgz')
-
         origin = {
             'url': 'file:///tmp/sample-folder',
             'type': 'dir'
@@ -108,22 +116,19 @@ class TarLoaderTest1(TestCase):
             'synthetic': True,
         }
 
-        branch_name = os.path.basename(tarpath)
+        branch_name = os.path.basename(self.tarpath)
 
         # when
-        self.loader.load(tar_path=tarpath, origin=origin,
+        self.loader.load(tar_path=self.tarpath, origin=origin,
                          visit_date=visit_date, revision=revision,
                          branch_name=branch_name)
 
         # then
-        self.assertEquals(len(self.loader.all_contents), 8,
-                          "8 contents: 3 files + 5 links")
-        self.assertEquals(len(self.loader.all_directories), 6,
-                          "6 directories: 4 subdirs + 1 empty + 1 main dir")
-        self.assertEquals(len(self.loader.all_revisions), 1,
-                          "synthetic revision")
+        self.assertCountContents(8, "3 files + 5 links")
+        self.assertCountDirectories(6, "4 subdirs + 1 empty + 1 main dir")
+        self.assertCountRevisions(1, "synthetic revision")
 
-        actual_revision = self.loader.all_revisions[0]
+        actual_revision = self.state('revision')[0]
         self.assertTrue(actual_revision['synthetic'])
         self.assertEquals(actual_revision['parents'],
                           [])
@@ -146,5 +151,5 @@ class TarLoaderTest1(TestCase):
                 'sha256': '307ebda0071ca5975f618e192c8417161e19b6c8bf581a26061b76dc8e85321d'  # noqa
             })
 
-        self.assertEquals(len(self.loader.all_releases), 0)
-        self.assertEquals(len(self.loader.all_snapshots), 1)
+        self.assertCountReleases(0)
+        self.assertCountSnapshots(1)
