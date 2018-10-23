@@ -25,7 +25,7 @@ class TestBuildUtils(unittest.TestCase):
             '/some/root/path/package-foo/package-foo-1.2.3.tgz')
 
         # then
-        self.assertEquals(actual_origin, expected_origin)
+        self.assertEqual(actual_origin, expected_origin)
 
     @patch('swh.loader.tar.build._time_from_path')
     def test_compute_revision(self, mock_time_from_path):
@@ -50,7 +50,7 @@ class TestBuildUtils(unittest.TestCase):
         }
 
         # then
-        self.assertEquals(actual_revision, expected_revision)
+        self.assertEqual(actual_revision, expected_revision)
 
         mock_time_from_path.assert_called_once_with('/some/path')
 
@@ -62,7 +62,7 @@ class TestBuildUtils(unittest.TestCase):
 
         actual_time = build._time_from_path('some/path')
 
-        self.assertEquals(actual_time, {
+        self.assertEqual(actual_time, {
             'seconds': 1445348286,
             'microseconds': 8308342
         })
@@ -78,7 +78,7 @@ class TestBuildUtils(unittest.TestCase):
 
         actual_time = build._time_from_path('some/path')
 
-        self.assertEquals(actual_time, {
+        self.assertEqual(actual_time, {
             'seconds': 1445348286,
             'microseconds': 0
         })

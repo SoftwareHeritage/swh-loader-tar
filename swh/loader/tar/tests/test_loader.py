@@ -127,16 +127,14 @@ class TarLoaderTest1(TarLoaderTest):
 
         actual_revision = self.state('revision')[0]
         self.assertTrue(actual_revision['synthetic'])
-        self.assertEquals(actual_revision['parents'],
-                          [])
-        self.assertEquals(actual_revision['type'],
-                          'tar')
-        self.assertEquals(actual_revision['message'],
-                          b'swh-loader-tar: synthetic revision message')
-        self.assertEquals(actual_revision['directory'],
-                          b'\xa7A\xfcM\x96\x8c{\x8e<\x94\xff\x86\xe7\x04\x80\xc5\xc7\xe5r\xa9')  # noqa
+        self.assertEqual(actual_revision['parents'], [])
+        self.assertEqual(actual_revision['type'], 'tar')
+        self.assertEqual(actual_revision['message'],
+                         b'swh-loader-tar: synthetic revision message')
+        self.assertEqual(actual_revision['directory'],
+                         b'\xa7A\xfcM\x96\x8c{\x8e<\x94\xff\x86\xe7\x04\x80\xc5\xc7\xe5r\xa9')  # noqa
 
-        self.assertEquals(
+        self.assertEqual(
             actual_revision['metadata']['original_artifact'][0],
             {
                 'sha1_git': 'cc848944a0d3e71d287027347e25467e61b07428',
