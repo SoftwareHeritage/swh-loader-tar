@@ -5,7 +5,7 @@
 
 import os
 
-from nose.plugins.attrib import attr
+import pytest
 
 from swh.loader.core.tests import BaseLoaderTest, LoaderNoStorage
 from swh.loader.tar.loader import TarLoader
@@ -71,7 +71,7 @@ class TarLoaderTest1(TarLoaderTest):
         super().setUp()
         self.loader = TarLoaderNoStorage()
 
-    @attr('fs')
+    @pytest.mark.fs
     def test_load(self):
         """Process a new tarball should be ok
 
