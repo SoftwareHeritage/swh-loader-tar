@@ -10,7 +10,7 @@ Loader for source code archives (including tarballs, zip, and other formats).
    :maxdepth: 2
    :caption: Contents:
 
-   README.md
+   README
 
 
 Reference Documentation
