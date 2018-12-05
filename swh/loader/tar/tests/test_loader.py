@@ -7,52 +7,37 @@ import os
 
 import pytest
 
-from swh.loader.core.tests import BaseLoaderTest, LoaderNoStorage
+from swh.model import hashutil
+
+from swh.loader.core.tests import BaseLoaderTest
 from swh.loader.tar.loader import TarLoader
-
-
-class TarLoaderNoStorage(LoaderNoStorage, TarLoader):
-    """A DirLoader with no persistence.
-
-    Context:
-        Load a tarball with a persistent-less tarball loader
-
-    """
-    def __init__(self, config={}):
-        super().__init__(config=config)
-        self.origin_id = 1
-        self.visit = 1
 
 
 TEST_CONFIG = {
     'extraction_dir': '/tmp/tests/loader-tar/',  # where to extract the tarball
     'storage': {  # we instantiate it but we don't use it in test context
-        'cls': 'remote',
+        'cls': 'memory',
         'args': {
-            'url': 'http://127.0.0.1:9999',  # somewhere that does not exist
         }
     },
-    'send_contents': False,
-    'send_directories': False,
-    'send_revisions': False,
-    'send_releases': False,
-    'send_snapshot': False,
+    'send_contents': True,
+    'send_directories': True,
+    'send_revisions': True,
+    'send_releases': True,
+    'send_snapshot': True,
     'content_packet_size': 100,
     'content_packet_block_size_bytes': 104857600,
     'content_packet_size_bytes': 1073741824,
     'directory_packet_size': 250,
     'revision_packet_size': 100,
     'release_packet_size': 100,
+    'content_size_limit': 1000000000
 }
 
 
-def parse_config_file(base_filename=None, config_filename=None,
-                      additional_configs=None, global_config=True):
-    return TEST_CONFIG
-
-
-# Inhibit side-effect loading configuration from disk
-TarLoader.parse_config_file = parse_config_file
+class TestTarLoader(TarLoader):
+    def parse_config_file(self, *args, **kwargs):
+        return TEST_CONFIG
 
 
 class TarLoaderTest(BaseLoaderTest):
@@ -69,7 +54,8 @@ class TarLoaderTest(BaseLoaderTest):
 class TarLoaderTest1(TarLoaderTest):
     def setUp(self):
         super().setUp()
-        self.loader = TarLoaderNoStorage()
+        self.loader = TestTarLoader()
+        self.storage = self.loader.storage
 
     @pytest.mark.fs
     def test_load(self):
@@ -85,9 +71,10 @@ class TarLoaderTest1(TarLoaderTest):
         visit_date = 'Tue, 3 May 2016 17:16:32 +0200'
 
         import datetime
-        commit_time = int(datetime.datetime.now(
-            tz=datetime.timezone.utc).timestamp()
-        )
+        commit_time = int(datetime.datetime(
+            2018, 12, 5, 13, 35, 23, 0,
+            tzinfo=datetime.timezone(datetime.timedelta(hours=1))
+        ).timestamp())
 
         swh_person = {
             'name': 'Software Heritage',
@@ -125,7 +112,9 @@ class TarLoaderTest1(TarLoaderTest):
         self.assertCountDirectories(6, "4 subdirs + 1 empty + 1 main dir")
         self.assertCountRevisions(1, "synthetic revision")
 
-        actual_revision = self.state('revision')[0]
+        rev_id = hashutil.hash_to_bytes(
+            '67a7d7dda748f9a86b56a13d9218d16f5cc9ab3d')
+        actual_revision = next(self.storage.revision_get([rev_id]))
         self.assertTrue(actual_revision['synthetic'])
         self.assertEqual(actual_revision['parents'], [])
         self.assertEqual(actual_revision['type'], 'tar')
