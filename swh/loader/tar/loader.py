@@ -9,7 +9,7 @@ import tempfile
 import shutil
 
 from swh.core import tarball
-from swh.loader.core.loader import SWHLoader
+from swh.loader.core.loader import BufferedLoader
 from swh.loader.dir import loader
 from swh.model.hashutil import MultiHash
 
@@ -59,9 +59,9 @@ class TarLoader(loader.DirLoader):
 
         """
         # Shortcut super() as we use different arguments than the DirLoader.
-        return SWHLoader.load(self, tar_path=tar_path, origin=origin,
-                              visit_date=visit_date, revision=revision,
-                              branch_name=branch_name)
+        return BufferedLoader.load(self, tar_path=tar_path, origin=origin,
+                                   visit_date=visit_date, revision=revision,
+                                   branch_name=branch_name)
 
     def prepare_origin_visit(self, *, origin, visit_date=None, **kwargs):
         self.origin = origin
