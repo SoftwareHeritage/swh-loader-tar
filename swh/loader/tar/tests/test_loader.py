@@ -35,12 +35,12 @@ TEST_CONFIG = {
 }
 
 
-class TestTarLoader(TarLoader):
+class TarLoaderTest(TarLoader):
     def parse_config_file(self, *args, **kwargs):
         return TEST_CONFIG
 
 
-class TarLoaderTest(BaseLoaderTest):
+class TestTarLoader(BaseLoaderTest):
     """Prepare the archive to load
 
     """
@@ -51,10 +51,10 @@ class TarLoaderTest(BaseLoaderTest):
         self.tarpath = self.destination_path
 
 
-class TarLoaderTest1(TarLoaderTest):
+class TestTarLoader1(TestTarLoader):
     def setUp(self):
         super().setUp()
-        self.loader = TestTarLoader()
+        self.loader = TarLoaderTest()
         self.storage = self.loader.storage
 
     @pytest.mark.fs
