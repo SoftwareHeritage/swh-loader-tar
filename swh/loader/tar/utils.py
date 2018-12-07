@@ -4,27 +4,8 @@
 # See top-level LICENSE file for more information
 
 import random
-import itertools
 
-
-def grouper(iterable, n, fillvalue=None):
-    """Collect data into fixed-length chunks or blocks.
-
-    Args:
-        iterable (Iterable): an iterable
-        n (int): size of block to slice the iterable into
-        fillvalue (Optional[Something]): value to use as fill-in
-          values (typically for the last loop, the iterable might be
-          less than n elements). None by default but could be anything
-          relevant for the caller (e.g tuple of (None, None))
-
-    Returns:
-        fixed-length chunks of blocks as iterables
-
-    """
-    args = [iter(iterable)] * n
-    for _data in itertools.zip_longest(*args, fillvalue=fillvalue):
-        yield (d for d in _data if d is not fillvalue)
+from swh.core.utils import grouper
 
 
 def random_blocks(iterable, block=100, fillvalue=None):
