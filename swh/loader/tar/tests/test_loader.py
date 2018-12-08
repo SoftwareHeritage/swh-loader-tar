@@ -14,7 +14,8 @@ from swh.loader.tar.loader import TarLoader
 
 
 TEST_CONFIG = {
-    'extraction_dir': '/tmp/tests/loader-tar/',  # where to extract the tarball
+    'working_dir': '/tmp/tests/loader-tar/',  # where to extract the tarball
+    'debug': False,
     'storage': {  # we instantiate it but we don't use it in test context
         'cls': 'memory',
         'args': {
@@ -64,48 +65,17 @@ class TestTarLoader1(TestTarLoader):
         """
         # given
         origin = {
-            'url': 'file:///tmp/sample-folder',
-            'type': 'dir'
+            'url': self.repo_url,
+            'type': 'tar'
         }
 
         visit_date = 'Tue, 3 May 2016 17:16:32 +0200'
 
-        import datetime
-        commit_time = int(datetime.datetime(
-            2018, 12, 5, 13, 35, 23, 0,
-            tzinfo=datetime.timezone(datetime.timedelta(hours=1))
-        ).timestamp())
-
-        swh_person = {
-            'name': 'Software Heritage',
-            'fullname': 'Software Heritage',
-            'email': 'robot@softwareheritage.org'
-        }
-
-        revision_message = 'swh-loader-tar: synthetic revision message'
-        revision_type = 'tar'
-        revision = {
-            'date': {
-                'timestamp': commit_time,
-                'offset': 0,
-            },
-            'committer_date': {
-                'timestamp': commit_time,
-                'offset': 0,
-            },
-            'author': swh_person,
-            'committer': swh_person,
-            'type': revision_type,
-            'message': revision_message,
-            'synthetic': True,
-        }
-
-        branch_name = os.path.basename(self.tarpath)
+        last_modified = '2018-12-05T12:35:23+00:00'
 
         # when
-        self.loader.load(tar_path=self.tarpath, origin=origin,
-                         visit_date=visit_date, revision=revision,
-                         branch_name=branch_name)
+        self.loader.load(
+            origin=origin, visit_date=visit_date, last_modified=last_modified)
 
         # then
         self.assertCountContents(8, "3 files + 5 links")

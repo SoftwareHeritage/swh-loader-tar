@@ -48,7 +48,7 @@ setup(
     install_requires=parse_requirements() + parse_requirements('swh'),
     setup_requires=['vcversioner'],
     extras_require={'testing': parse_requirements('test')},
-    vcversioner={},
+    vcversioner={'version_module_paths': ['swh/loader/tar/_version.py']},
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
