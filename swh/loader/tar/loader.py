@@ -167,15 +167,23 @@ class TarLoader(BufferedLoader):
             self.origin['type'] = 'tar'
         self.visit_date = visit_date
 
-    def prepare(self, *args, **kwargs):
+    def prepare(self, *, origin, last_modified, visit_date=None):
         """last_modified is the time of last modification of the tarball.
 
         E.g https://ftp.gnu.org/gnu/8sync/:
             [ ] 8sync-0.1.0.tar.gz	2016-04-22 16:35 	217K
             [ ] 8sync-0.1.0.tar.gz.sig	2016-04-22 16:35 	543
 
+        Args:
+            origin (dict): Dict with keys {url, type}
+            last_modified (str): The date of last modification of the
+              archive to ingest.
+            visit_date (str): Date representing the date of the
+              visit. None by default will make it the current time
+              during the loading process.
+
         """
-        self.last_modified = kwargs.get('last_modified')
+        self.last_modified = last_modified
 
     def fetch_data(self):
         """Retrieve and uncompress the archive.

@@ -9,19 +9,18 @@ from swh.loader.tar.loader import TarLoader
 
 
 class LoadTarRepository(Task):
-    """Import a directory to Software Heritage
+    """Import a remote or local archive to Software Heritage
 
     """
     task_queue = 'swh_loader_tar'
 
-    def run_task(self, *, tar_path, origin, visit_date, revision,
-                 branch_name=None):
+    def run_task(self, *, origin, visit_date, last_modified):
         """Import a tarball into swh.
 
-        Args: see :func:`TarLoader.load`.
+        Args: see :func:`TarLoader.prepare`.
+
         """
         loader = TarLoader()
         loader.log = self.log
-        return loader.load(tar_path=tar_path, origin=origin,
-                           visit_date=visit_date, revision=revision,
-                           branch_name=branch_name)
+        return loader.load(
+            origin=origin, visit_date=visit_date, last_modified=last_modified)
