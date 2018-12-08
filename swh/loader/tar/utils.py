@@ -8,8 +8,10 @@ import random
 from swh.core.utils import grouper
 
 
-def random_blocks(iterable, block=100, fillvalue=None):
-    """Given an iterable:
+def random_blocks(iterable, block=100):
+    """Randomize iterable per block of size block.
+
+    Given an iterable:
 
     - slice the iterable in data set of block-sized elements
     - randomized the block-sized elements
@@ -19,17 +21,13 @@ def random_blocks(iterable, block=100, fillvalue=None):
     Args:
         iterable (Iterable): an iterable
         block (int): number of elements per block
-        fillvalue (Optional[Something]): value to use as fill-in
-          values (typically for the last loop, the iterable might be
-          less than n elements). None by default but could be anything
-          relevant for the caller (e.g tuple of (None, None))
 
     Yields:
-        random elements per size of block
+        random element of the iterable
 
     """
     count = 0
-    for iter_ in grouper(iterable, block, fillvalue=fillvalue):
+    for iter_ in grouper(iterable, block):
         count += 1
         lst = list(iter_)
         random.shuffle(lst)

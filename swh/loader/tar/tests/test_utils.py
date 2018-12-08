@@ -39,6 +39,5 @@ class UtilsLib(unittest.TestCase):
 
     def test_random_block_with_fillvalue(self):
         _input = [(i, i+1) for i in range(0, 9)]
-        actual_data = utils.random_blocks(_input, 2,
-                                          fillvalue=(None, None))
+        actual_data = utils.random_blocks(_input, 2)
         self.assert_ok(actual_data, expected_data=_input)
