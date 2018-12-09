@@ -258,7 +258,7 @@ class RemoteTarLoader(BaseTarLoader):
         }
 
     def build_snapshot(self, revision):
-        """Build the snapshot targetting the revision.
+        """Build the snapshot targeting the revision.
 
         """
         branch_name = os.path.basename(self.dir_path)
@@ -319,7 +319,7 @@ class TarLoader(BaseTarLoader):
         }
 
     def build_snapshot(self, revision):
-        """Build the snapshot targetting the revision.
+        """Build the snapshot targeting the revision.
 
         We use the branch_name provided by the caller as a scaffolding
         as well.
