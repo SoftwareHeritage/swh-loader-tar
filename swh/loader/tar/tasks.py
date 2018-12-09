@@ -5,7 +5,7 @@
 
 from swh.scheduler.task import Task
 
-from swh.loader.tar.loader import TarLoader
+from swh.loader.tar.loader import RemoteTarLoader
 
 
 class LoadTarRepository(Task):
@@ -20,7 +20,7 @@ class LoadTarRepository(Task):
         Args: see :func:`TarLoader.prepare`.
 
         """
-        loader = TarLoader()
+        loader = RemoteTarLoader()
         loader.log = self.log
         return loader.load(
             origin=origin, visit_date=visit_date, last_modified=last_modified)

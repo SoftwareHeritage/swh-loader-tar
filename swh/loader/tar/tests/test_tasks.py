@@ -14,7 +14,7 @@ class TestTasks(unittest.TestCase):
         task = LoadTarRepository()
         self.assertEqual(task.task_queue, 'swh_loader_tar')
 
-    @patch('swh.loader.tar.loader.TarLoader.load')
+    @patch('swh.loader.tar.loader.RemoteTarLoader.load')
     def test_task(self, mock_loader):
         mock_loader.return_value = {'status': 'eventful'}
         task = LoadTarRepository()
