@@ -193,7 +193,7 @@ class TestTarLoader(PrepareDataForTestLoader):
         self.storage = self.loader.storage
 
     def test_load(self):
-        """Process a new tarball should be ok
+        """Load a local tarball should result in persisted swh data
 
         """
         # given
