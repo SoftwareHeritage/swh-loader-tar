@@ -178,7 +178,9 @@ class BaseTarLoader(BufferedLoader):
         raise NotImplementedError()
 
     def fetch_data(self):
-        """Retrieve, uncompress archive and fetch objects from the archive.
+        """Retrieve, uncompress archive and fetch objects from the tarball.
+           The actual ingestion takes place in the :meth:`store_data`
+           implementation below.
 
         """
         url = self.get_tarball_url_to_retrieve()
@@ -207,6 +209,9 @@ class BaseTarLoader(BufferedLoader):
         self.objects = objects
 
     def store_data(self):
+        """Store the objects in the swh archive.
+
+        """
         objects = self.objects
         self.maybe_load_contents(objects['content'].values())
         self.maybe_load_directories(objects['directory'].values())
@@ -216,8 +221,8 @@ class BaseTarLoader(BufferedLoader):
 
 
 class RemoteTarLoader(BaseTarLoader):
-    """Tarball loader implementation: This is able to load from
-       remote/local archive into the swh archive.
+    """This is able to load from remote/local archive into the swh
+       archive.
 
     This will:
 
@@ -234,6 +239,7 @@ class RemoteTarLoader(BaseTarLoader):
         E.g https://ftp.gnu.org/gnu/8sync/:
             [ ] 8sync-0.1.0.tar.gz	2016-04-22 16:35 	217K
             [ ] 8sync-0.1.0.tar.gz.sig	2016-04-22 16:35 	543
+            [ ] ...
 
         Args:
             origin (dict): Dict with keys {url, type}
@@ -276,13 +282,13 @@ class RemoteTarLoader(BaseTarLoader):
 
 
 class LegacyLocalTarLoader(BaseTarLoader):
-    """Legacy tarball loader implementation: this loads local tarball into
-       the swh archive. It's using the revision and branch provided by
-       the caller as scaffolding to create the real revisions.
+    """This loads local tarball into the swh archive. It's using the
+       revision and branch provided by the caller as scaffolding to
+       create the full revision and snapshot (with identifiers).
 
        This is what's:
-       - used by the loader deposit
        - been used to ingest our 2015 rsync copy of gnu.org
+       - still used by the loader deposit
 
     This will:
 
