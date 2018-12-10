@@ -265,8 +265,8 @@ class RemoteTarLoader(BaseTarLoader):
         return snapshot_from(revision['id'], branch_name)
 
 
-class TarLoader(BaseTarLoader):
     """Old Tarball loader implementation.
+class LegacyLocalTarLoader(BaseTarLoader):
 
     This will:
 
@@ -326,3 +326,7 @@ class TarLoader(BaseTarLoader):
 
         """
         return snapshot_from(revision['id'], self.branch_name)
+
+
+# Aliasing for retro-compatibility
+TarLoader = LegacyLocalTarLoader
