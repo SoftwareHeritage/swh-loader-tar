@@ -52,9 +52,41 @@ class PrepareDataForTestLoader(BaseLoaderTest):
                       uncompress_archive=False)
         self.tarpath = self.destination_path
 
+    def assert_data_ok(self):
+        # then
+        self.assertCountContents(8, "3 files + 5 links")
+        self.assertCountDirectories(6, "4 subdirs + 1 empty + 1 main dir")
+        self.assertCountRevisions(1, "synthetic revision")
 
-class TestBaseRemoteTarLoader(PrepareDataForTestLoader):
-    """Test the remote loader
+        rev_id = hashutil.hash_to_bytes(
+            '67a7d7dda748f9a86b56a13d9218d16f5cc9ab3d')
+        actual_revision = next(self.storage.revision_get([rev_id]))
+        self.assertTrue(actual_revision['synthetic'])
+        self.assertEqual(actual_revision['parents'], [])
+        self.assertEqual(actual_revision['type'], 'tar')
+        self.assertEqual(actual_revision['message'],
+                         b'swh-loader-tar: synthetic revision message')
+        self.assertEqual(actual_revision['directory'],
+                         b'\xa7A\xfcM\x96\x8c{\x8e<\x94\xff\x86\xe7\x04\x80\xc5\xc7\xe5r\xa9')  # noqa
+
+        self.assertEqual(
+            actual_revision['metadata']['original_artifact'][0],
+            {
+                'sha1_git': 'cc848944a0d3e71d287027347e25467e61b07428',
+                'archive_type': 'tar',
+                'blake2s256': '5d70923443ad36377cd58e993aff0e3c1b9ef14f796c69569105d3a99c64f075',  # noqa
+                'name': 'sample-folder.tgz',
+                'sha1': '3ca0d0a5c6833113bd532dc5c99d9648d618f65a',
+                'length': 555,
+                'sha256': '307ebda0071ca5975f618e192c8417161e19b6c8bf581a26061b76dc8e85321d'  # noqa
+            })
+
+        self.assertCountReleases(0)
+        self.assertCountSnapshots(1)
+
+
+class TestRemoteTarLoader(PrepareDataForTestLoader):
+    """Test the remote loader scenario (local/remote)
 
     """
     def setUp(self):
@@ -62,8 +94,6 @@ class TestBaseRemoteTarLoader(PrepareDataForTestLoader):
         self.loader = RemoteTarLoaderForTest()
         self.storage = self.loader.storage
 
-
-class TestRemoteTarLoader(TestBaseRemoteTarLoader):
     @pytest.mark.fs
     def test_load_local(self):
         """Load a local tarball should result in persisted swh data
@@ -84,47 +114,17 @@ class TestRemoteTarLoader(TestBaseRemoteTarLoader):
             origin=origin, visit_date=visit_date, last_modified=last_modified)
 
         # then
-        self.assertCountContents(8, "3 files + 5 links")
-        self.assertCountDirectories(6, "4 subdirs + 1 empty + 1 main dir")
-        self.assertCountRevisions(1, "synthetic revision")
+        self.assert_data_ok()
 
-        rev_id = hashutil.hash_to_bytes(
-            '67a7d7dda748f9a86b56a13d9218d16f5cc9ab3d')
-        actual_revision = next(self.storage.revision_get([rev_id]))
-        self.assertTrue(actual_revision['synthetic'])
-        self.assertEqual(actual_revision['parents'], [])
-        self.assertEqual(actual_revision['type'], 'tar')
-        self.assertEqual(actual_revision['message'],
-                         b'swh-loader-tar: synthetic revision message')
-        self.assertEqual(actual_revision['directory'],
-                         b'\xa7A\xfcM\x96\x8c{\x8e<\x94\xff\x86\xe7\x04\x80\xc5\xc7\xe5r\xa9')  # noqa
-
-        self.assertEqual(
-            actual_revision['metadata']['original_artifact'][0],
-            {
-                'sha1_git': 'cc848944a0d3e71d287027347e25467e61b07428',
-                'archive_type': 'tar',
-                'blake2s256': '5d70923443ad36377cd58e993aff0e3c1b9ef14f796c69569105d3a99c64f075',  # noqa
-                'name': 'sample-folder.tgz',
-                'sha1': '3ca0d0a5c6833113bd532dc5c99d9648d618f65a',
-                'length': 555,
-                'sha256': '307ebda0071ca5975f618e192c8417161e19b6c8bf581a26061b76dc8e85321d'  # noqa
-            })
-
-        self.assertCountReleases(0)
-        self.assertCountSnapshots(1)
-
-
-class TestRemoteTarLoader2(TestBaseRemoteTarLoader):
-    @pytest.mark.fs
     @requests_mock.Mocker()
     def test_load_remote(self, mock_requests):
         """Load a remote tarball should result in persisted swh data
 
         """
         # setup the mock to stream the content of the tarball
-        url = 'https://nowhere.org/%s' % self.repo_url
-        with open(self.repo_url.replace('file:///', '/'), 'rb') as f:
+        local_url = self.repo_url.replace('file:///', '/')
+        url = 'https://nowhere.org/%s' % local_url
+        with open(local_url, 'rb') as f:
             data = f.read()
             mock_requests.get(url, content=data, headers={
                 'content-length': str(len(data))
@@ -144,36 +144,7 @@ class TestRemoteTarLoader2(TestBaseRemoteTarLoader):
         self.loader.load(
             origin=origin, visit_date=visit_date, last_modified=last_modified)
 
-        # then
-        self.assertCountContents(8, "3 files + 5 links")
-        self.assertCountDirectories(6, "4 subdirs + 1 empty + 1 main dir")
-        self.assertCountRevisions(1, "synthetic revision")
-
-        rev_id = hashutil.hash_to_bytes(
-            '67a7d7dda748f9a86b56a13d9218d16f5cc9ab3d')
-        actual_revision = next(self.storage.revision_get([rev_id]))
-        self.assertTrue(actual_revision['synthetic'])
-        self.assertEqual(actual_revision['parents'], [])
-        self.assertEqual(actual_revision['type'], 'tar')
-        self.assertEqual(actual_revision['message'],
-                         b'swh-loader-tar: synthetic revision message')
-        self.assertEqual(actual_revision['directory'],
-                         b'\xa7A\xfcM\x96\x8c{\x8e<\x94\xff\x86\xe7\x04\x80\xc5\xc7\xe5r\xa9')  # noqa
-
-        self.assertEqual(
-            actual_revision['metadata']['original_artifact'][0],
-            {
-                'sha1_git': 'cc848944a0d3e71d287027347e25467e61b07428',
-                'archive_type': 'tar',
-                'blake2s256': '5d70923443ad36377cd58e993aff0e3c1b9ef14f796c69569105d3a99c64f075',  # noqa
-                'name': 'sample-folder.tgz',
-                'sha1': '3ca0d0a5c6833113bd532dc5c99d9648d618f65a',
-                'length': 555,
-                'sha256': '307ebda0071ca5975f618e192c8417161e19b6c8bf581a26061b76dc8e85321d'  # noqa
-            })
-
-        self.assertCountReleases(0)
-        self.assertCountSnapshots(1)
+        self.assert_data_ok()
 
 
 class TarLoaderForTest(TarLoader):
@@ -236,32 +207,4 @@ class TestTarLoader2(PrepareDataForTestLoader):
                          branch_name=branch_name)
 
         # then
-        self.assertCountContents(8, "3 files + 5 links")
-        self.assertCountDirectories(6, "4 subdirs + 1 empty + 1 main dir")
-        self.assertCountRevisions(1, "synthetic revision")
-
-        rev_id = hashutil.hash_to_bytes(
-            '67a7d7dda748f9a86b56a13d9218d16f5cc9ab3d')
-        actual_revision = next(self.storage.revision_get([rev_id]))
-        self.assertTrue(actual_revision['synthetic'])
-        self.assertEqual(actual_revision['parents'], [])
-        self.assertEqual(actual_revision['type'], 'tar')
-        self.assertEqual(actual_revision['message'],
-                         b'swh-loader-tar: synthetic revision message')
-        self.assertEqual(actual_revision['directory'],
-                         b'\xa7A\xfcM\x96\x8c{\x8e<\x94\xff\x86\xe7\x04\x80\xc5\xc7\xe5r\xa9')  # noqa
-
-        self.assertEqual(
-            actual_revision['metadata']['original_artifact'][0],
-            {
-                'sha1_git': 'cc848944a0d3e71d287027347e25467e61b07428',
-                'archive_type': 'tar',
-                'blake2s256': '5d70923443ad36377cd58e993aff0e3c1b9ef14f796c69569105d3a99c64f075',  # noqa
-                'name': 'sample-folder.tgz',
-                'sha1': '3ca0d0a5c6833113bd532dc5c99d9648d618f65a',
-                'length': 555,
-                'sha256': '307ebda0071ca5975f618e192c8417161e19b6c8bf581a26061b76dc8e85321d'  # noqa
-            })
-
-        self.assertCountReleases(0)
-        self.assertCountSnapshots(1)
+        self.assert_data_ok()
