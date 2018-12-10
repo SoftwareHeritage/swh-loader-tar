@@ -207,7 +207,8 @@ class BaseTarLoader(BufferedLoader):
 
 
 class RemoteTarLoader(BaseTarLoader):
-    """Tarball loader implementation.
+    """Tarball loader implementation: This is able to load from
+       remote/local archive into the swh archive.
 
     This will:
 
@@ -265,8 +266,14 @@ class RemoteTarLoader(BaseTarLoader):
         return snapshot_from(revision['id'], branch_name)
 
 
-    """Old Tarball loader implementation.
 class LegacyLocalTarLoader(BaseTarLoader):
+    """Legacy tarball loader implementation: this loads local tarball into
+       the swh archive. It's using the revision and branch provided by
+       the caller as scaffolding to create the real revisions.
+
+       This is what's:
+       - used by the loader deposit
+       - been used to ingest our 2015 rsync copy of gnu.org
 
     This will:
 
