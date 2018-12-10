@@ -166,7 +166,7 @@ class BaseTarLoader(BufferedLoader):
         """Compute the tarball url to allow retrieval
 
         """
-        pass
+        raise NotImplementedError()
 
     def fetch_data(self):
         """Retrieve, uncompress archive and fetch objects from the archive.
