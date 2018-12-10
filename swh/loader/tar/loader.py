@@ -157,6 +157,15 @@ class BaseTarLoader(BufferedLoader):
             shutil.rmtree(self.temp_directory)
 
     def prepare_origin_visit(self, *, origin, visit_date=None, **kwargs):
+        """Prepare the origin visit information.
+
+        Args:
+            origin (dict): Dict with keys {url, type}
+            visit_date (str): Date representing the date of the
+              visit. None by default will make it the current time
+              during the loading process.
+
+        """
         self.origin = origin
         if 'type' not in self.origin:  # let the type flow if present
             self.origin['type'] = 'tar'
@@ -219,7 +228,7 @@ class RemoteTarLoader(BaseTarLoader):
     - clean up the temporary location
 
     """
-    def prepare(self, *, origin, last_modified, visit_date=None):
+    def prepare(self, *, last_modified, **kwargs):
         """last_modified is the time of last modification of the tarball.
 
         E.g https://ftp.gnu.org/gnu/8sync/:
@@ -284,20 +293,15 @@ class LegacyLocalTarLoader(BaseTarLoader):
     - clean up the temporary location
 
     """
-    def prepare(self, *, tar_path, origin, revision, branch_name,
-                visit_date=None):
+    def prepare(self, *, tar_path, revision, branch_name, **kwargs):
         """Prepare the data prior to ingest it in SWH archive.
 
         Args:
             tar_path (str): Path to the archive to ingest
-            origin (dict): Dict with keys {url, type}
             revision (dict): The synthetic revision to associate the
               archive to (no identifiers within)
             branch_name (str): The branch name to use for the
               snapshot.
-            visit_date (str): Date representing the date of the
-              visit. None by default will make it the current time
-              during the loading process.
 
         """
         self.tar_path = tar_path
