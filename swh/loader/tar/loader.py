@@ -214,7 +214,7 @@ class RemoteTarLoader(BaseTarLoader):
     - create an origin (if it does not exist) and a visit
     - fetch the tarball in a temporary location
     - uncompress it locally in a temporary location
-    - process the content of the tarballs to persist on swh storage
+    - process the content of the tarball to persist on swh storage
     - clean up the temporary location
 
     """
@@ -272,7 +272,7 @@ class TarLoader(BaseTarLoader):
 
     - create an origin (if it does not exist) and a visit
     - uncompress a tarball in a local and temporary location
-    - process the content of the tarballs to persist on swh storage
+    - process the content of the tarball to persist on swh storage
     - associate it to a passed revision and snapshot
     - clean up the temporary location
 
