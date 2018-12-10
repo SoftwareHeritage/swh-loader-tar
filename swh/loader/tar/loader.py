@@ -162,7 +162,7 @@ class BaseTarLoader(BufferedLoader):
             self.origin['type'] = 'tar'
         self.visit_date = visit_date
 
-    def compute_tarball_url_to_retrieve(self):
+    def get_tarball_url_to_retrieve(self):
         """Compute the tarball url to allow retrieval
 
         """
@@ -172,7 +172,7 @@ class BaseTarLoader(BufferedLoader):
         """Retrieve, uncompress archive and fetch objects from the archive.
 
         """
-        url = self.compute_tarball_url_to_retrieve()
+        url = self.get_tarball_url_to_retrieve()
         filepath, hashes = self.client.download(url)
         nature = tarball.uncompress(filepath, self.dir_path)
 
@@ -236,7 +236,7 @@ class RemoteTarLoader(BaseTarLoader):
         """
         self.last_modified = last_modified
 
-    def compute_tarball_url_to_retrieve(self):
+    def get_tarball_url_to_retrieve(self):
         return self.origin['url']
 
     def build_revision(self, filepath, nature, hashes):
@@ -297,7 +297,7 @@ class TarLoader(BaseTarLoader):
         self.revision = revision
         self.branch_name = branch_name
 
-    def compute_tarball_url_to_retrieve(self):
+    def get_tarball_url_to_retrieve(self):
         return 'file://%s' % self.tar_path
 
     def build_revision(self, filepath, nature, hashes):
