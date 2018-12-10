@@ -8,6 +8,7 @@ import os
 import tempfile
 import requests
 import shutil
+from urllib.parse import urlparse
 
 from tempfile import mkdtemp
 
@@ -75,9 +76,9 @@ class ArchiveFetcher:
             Tuple of local (filepath, hashes of filepath)
 
         """
-        if url.startswith('file://'):
-            # FIXME: How to improve this
-            path = url.strip('file:').replace('///', '/')
+        url_parsed = urlparse(url)
+        if url_parsed.scheme == 'file':
+            path = url_parsed.path
             response = LocalResponse(path)
             length = os.path.getsize(path)
         else:
