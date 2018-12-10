@@ -182,7 +182,7 @@ class TarLoaderForTest(TarLoader):
         return TEST_CONFIG
 
 
-class TestTarLoader2(PrepareDataForTestLoader):
+class TestTarLoader(PrepareDataForTestLoader):
     """Test the legacy tar loader
 
     """
