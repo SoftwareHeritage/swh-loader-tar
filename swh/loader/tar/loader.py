@@ -15,7 +15,7 @@ from tempfile import mkdtemp
 from swh.core import tarball
 from swh.loader.core.loader import BufferedLoader
 from swh.loader.dir.loader import revision_from, snapshot_from
-from swh.model.hashutil import MultiHash
+from swh.model.hashutil import MultiHash, HASH_BLOCK_SIZE
 from swh.model.from_disk import Directory
 
 from .build import compute_revision
@@ -28,7 +28,6 @@ except ImportError:
 
 TEMPORARY_DIR_PREFIX_PATTERN = 'swh.loader.tar.'
 DEBUG_MODE = '** DEBUG MODE **'
-CHUNK_SIZE = 4096
 
 
 class LocalResponse:
@@ -93,7 +92,7 @@ class ArchiveFetcher:
 
         h = MultiHash(length=length)
         with open(filepath, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
+            for chunk in response.iter_content(chunk_size=HASH_BLOCK_SIZE):
                 h.update(chunk)
                 f.write(chunk)
 
