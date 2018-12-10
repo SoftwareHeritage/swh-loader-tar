@@ -28,6 +28,7 @@ except ImportError:
 
 TEMPORARY_DIR_PREFIX_PATTERN = 'swh.loader.tar.'
 DEBUG_MODE = '** DEBUG MODE **'
+CHUNK_SIZE = 4096
 
 
 class LocalResponse:
@@ -92,7 +93,7 @@ class ArchiveFetcher:
 
         h = MultiHash(length=length)
         with open(filepath, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=None):
+            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 h.update(chunk)
                 f.write(chunk)
 
