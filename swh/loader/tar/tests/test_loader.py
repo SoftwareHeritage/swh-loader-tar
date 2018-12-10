@@ -42,6 +42,7 @@ class RemoteTarLoaderForTest(RemoteTarLoader):
         return TEST_CONFIG
 
 
+@pytest.mark.fs
 class PrepareDataForTestLoader(BaseLoaderTest):
     """Prepare the archive to load (test fixture).
 
@@ -94,7 +95,6 @@ class TestRemoteTarLoader(PrepareDataForTestLoader):
         self.loader = RemoteTarLoaderForTest()
         self.storage = self.loader.storage
 
-    @pytest.mark.fs
     def test_load_local(self):
         """Load a local tarball should result in persisted swh data
 
@@ -198,7 +198,6 @@ class TestTarLoader2(PrepareDataForTestLoader):
         self.loader = TarLoaderForTest()
         self.storage = self.loader.storage
 
-    @pytest.mark.fs
     def test_load(self):
         """Process a new tarball should be ok
 
