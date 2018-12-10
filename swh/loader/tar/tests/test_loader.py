@@ -104,9 +104,7 @@ class TestRemoteTarLoader(PrepareDataForTestLoader):
             'url': self.repo_url,
             'type': 'tar'
         }
-
         visit_date = 'Tue, 3 May 2016 17:16:32 +0200'
-
         last_modified = '2018-12-05T12:35:23+00:00'
 
         # when
@@ -135,9 +133,7 @@ class TestRemoteTarLoader(PrepareDataForTestLoader):
             'url': url,
             'type': 'tar'
         }
-
         visit_date = 'Tue, 3 May 2016 17:16:32 +0200'
-
         last_modified = '2018-12-05T12:35:23+00:00'
 
         # when
@@ -166,9 +162,7 @@ class TestRemoteTarLoader(PrepareDataForTestLoader):
             'url': url,
             'type': 'tar'
         }
-
         visit_date = 'Tue, 3 May 2016 17:16:32 +0200'
-
         last_modified = '2018-12-05T12:35:23+00:00'
 
         # when
