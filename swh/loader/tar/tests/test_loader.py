@@ -146,6 +146,42 @@ class TestRemoteTarLoader(PrepareDataForTestLoader):
 
         self.assert_data_ok()
 
+    @requests_mock.Mocker()
+    def test_load_remote_download_failure(self, mock_requests):
+        """Load a remote tarball with download failure should result in no data
+
+        """
+        # setup the mock to stream the content of the tarball
+        local_url = self.repo_url.replace('file:///', '/')
+        url = 'https://nowhere.org/%s' % local_url
+        with open(local_url, 'rb') as f:
+            data = f.read()
+            wrong_length = len(data) - 10
+            mock_requests.get(url, content=data, headers={
+                'content-length': str(wrong_length)
+            })
+
+        # given
+        origin = {
+            'url': url,
+            'type': 'tar'
+        }
+
+        visit_date = 'Tue, 3 May 2016 17:16:32 +0200'
+
+        last_modified = '2018-12-05T12:35:23+00:00'
+
+        # when
+        r = self.loader.load(
+            origin=origin, visit_date=visit_date,
+            last_modified=last_modified)
+
+        self.assertEqual(r, {'status': 'failed'})
+        self.assertCountContents(0)
+        self.assertCountDirectories(0)
+        self.assertCountRevisions(0)
+        self.assertCountSnapshots(0)
+
 
 class TarLoaderForTest(TarLoader):
     def parse_config_file(self, *args, **kwargs):
