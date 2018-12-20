@@ -11,7 +11,7 @@ from swh.model import hashutil
 
 from swh.loader.core.tests import BaseLoaderTest
 from swh.loader.tar.build import SWH_PERSON
-from swh.loader.tar.loader import RemoteTarLoader, TarLoader
+from swh.loader.tar.loader import RemoteTarLoader, LegacyLocalTarLoader
 
 
 TEST_CONFIG = {
@@ -177,7 +177,7 @@ class TestRemoteTarLoader(PrepareDataForTestLoader):
         self.assertCountSnapshots(0)
 
 
-class TarLoaderForTest(TarLoader):
+class TarLoaderForTest(LegacyLocalTarLoader):
     def parse_config_file(self, *args, **kwargs):
         return TEST_CONFIG
 

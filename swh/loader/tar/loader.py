@@ -344,7 +344,3 @@ class LegacyLocalTarLoader(BaseTarLoader):
 
         """
         return snapshot_from(revision['id'], self.branch_name)
-
-
-# Aliasing for retro-compatibility
-TarLoader = LegacyLocalTarLoader
