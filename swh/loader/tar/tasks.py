@@ -3,24 +3,15 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.scheduler.task import Task
+from celery import current_app as app
 
 from swh.loader.tar.loader import RemoteTarLoader
 
 
-class LoadTarRepository(Task):
+@app.task(name=__name__ + '.LoadTarRepository')
+def load_tar(origin, visit_date, last_modified):
     """Import a remote or local archive to Software Heritage
-
     """
-    task_queue = 'swh_loader_tar'
-
-    def run_task(self, *, origin, visit_date, last_modified):
-        """Import a tarball into swh.
-
-        Args: see :func:`TarLoader.prepare`.
-
-        """
-        loader = RemoteTarLoader()
-        loader.log = self.log
-        return loader.load(
-            origin=origin, visit_date=visit_date, last_modified=last_modified)
+    loader = RemoteTarLoader()
+    return loader.load(
+        origin=origin, visit_date=visit_date, last_modified=last_modified)
