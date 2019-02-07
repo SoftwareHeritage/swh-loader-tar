@@ -3,9 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import os
-
-from swh.core import utils
+import arrow
 
 
 # Static setup
@@ -16,61 +14,36 @@ SWH_PERSON = {
     'fullname': 'Software Heritage',
     'email': 'robot@softwareheritage.org'
 }
-REVISION_MESSAGE = 'synthetic revision message'
+REVISION_MESSAGE = 'swh-loader-tar: synthetic revision message'
 REVISION_TYPE = 'tar'
 
 
-def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
-    """Compute the origin.
-
-    Args:
-        - url_scheme: scheme to build the origin's url
-        - url_type: origin's type
-        - root_dirpath: the top level root directory path
-        - tarpath: file's absolute path
-
-    Returns:
-        Dictionary origin with keys:
-       - url: origin's url
-       - type: origin's type
-
-    """
-    relative_path = utils.commonname(root_dirpath, tarpath)
-    return {
-        'url': ''.join([url_scheme,
-                        os.path.dirname(relative_path)]),
-        'type': url_type,
-    }
-
-
-def _time_from_path(tarpath):
+def _time_from_last_modified(last_modified):
     """Compute the modification time from the tarpath.
 
     Args:
-        tarpath (str|bytes): Full path to the archive to extract the
-        date from.
+        last_modified (str): Last modification time
 
     Returns:
-        dict representing a timestamp with keys seconds and microseconds keys.
+        dict representing a timestamp with keys {seconds, microseconds}
 
     """
-    mtime = os.lstat(tarpath).st_mtime
-    if isinstance(mtime, float):
-        normalized_time = list(map(int, str(mtime).split('.')))
-    else:  # assuming int
-        normalized_time = [mtime, 0]
-
+    last_modified = arrow.get(last_modified)
+    mtime = last_modified.float_timestamp
+    normalized_time = list(map(int, str(mtime).split('.')))
     return {
         'seconds': normalized_time[0],
         'microseconds': normalized_time[1]
     }
 
 
-def compute_revision(tarpath):
+def compute_revision(tarpath, last_modified):
     """Compute a revision.
 
     Args:
-        tarpath: absolute path to the tarball
+        tarpath (str): absolute path to the tarball
+        last_modified (str): Time of last modification read from the
+                             source remote (most probably by the lister)
 
     Returns:
         Revision as dict:
@@ -84,7 +57,8 @@ def compute_revision(tarpath):
         - message: cf. REVISION_MESSAGE
 
     """
-    ts = _time_from_path(tarpath)
+    ts = _time_from_last_modified(last_modified)
+
     return {
         'date': {
             'timestamp': ts,
@@ -98,4 +72,5 @@ def compute_revision(tarpath):
         'committer': SWH_PERSON,
         'type': REVISION_TYPE,
         'message': REVISION_MESSAGE,
+        'synthetic': True,
     }

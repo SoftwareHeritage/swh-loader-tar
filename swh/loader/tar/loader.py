@@ -6,149 +6,341 @@
 
 import os
 import tempfile
+import requests
 import shutil
+from urllib.parse import urlparse
+
+from tempfile import mkdtemp
 
 from swh.core import tarball
-from swh.loader.core.loader import SWHLoader
-from swh.loader.dir import loader
-from swh.loader.tar import utils
-from swh.model import hashutil
+from swh.loader.core.loader import BufferedLoader
+from swh.loader.dir.loader import revision_from, snapshot_from
+from swh.model.hashutil import MultiHash, HASH_BLOCK_SIZE
+from swh.model.from_disk import Directory
+
+from .build import compute_revision
+
+try:
+    from _version import __version__
+except ImportError:
+    __version__ = 'devel'
 
 
-class TarLoader(loader.DirLoader):
-    """Tarball loader implementation.
+TEMPORARY_DIR_PREFIX_PATTERN = 'swh.loader.tar.'
+DEBUG_MODE = '** DEBUG MODE **'
 
-    This is a subclass of the :class:DirLoader as the main goal of
-    this class is to first uncompress a tarball, then provide the
-    uncompressed directory/tree to be loaded by the DirLoader.
 
-    This will:
+class LocalResponse:
+    """Local Response class with iter_content api
 
-    - creates an origin (if it does not exist)
-    - creates a fetch_history entry
-    - creates an origin_visit
-    - uncompress locally the tarball in a temporary location
-    - process the content of the tarballs to persist on swh storage
-    - clean up the temporary location
-    - write an entry in fetch_history to mark the loading tarball end (success
-      or failure)
+    """
+    def __init__(self, path):
+        self.path = path
+
+    def iter_content(self, chunk_size=None):
+        with open(self.path, 'rb') as f:
+            for chunk in f:
+                yield chunk
+
+
+class ArchiveFetcher:
+    """Http/Local client in charge of downloading archives from a
+       remote/local server.
+
+    Args:
+        temp_directory (str): Path to the temporary disk location used
+                              for downloading the release artifacts
+
+    """
+    def __init__(self, temp_directory=None):
+        self.temp_directory = temp_directory
+        self.session = requests.session()
+        self.params = {
+            'headers': {
+                'User-Agent': 'Software Heritage Tar Loader (%s)' % (
+                    __version__
+                )
+            }
+        }
+
+    def download(self, url):
+        """Download the remote tarball url locally.
+
+        Args:
+            url (str): Url (file or http*)
+
+        Raises:
+            ValueError in case of failing to query
+
+        Returns:
+            Tuple of local (filepath, hashes of filepath)
+
+        """
+        url_parsed = urlparse(url)
+        if url_parsed.scheme == 'file':
+            path = url_parsed.path
+            response = LocalResponse(path)
+            length = os.path.getsize(path)
+        else:
+            response = self.session.get(url, **self.params, stream=True)
+            if response.status_code != 200:
+                raise ValueError("Fail to query '%s'. Reason: %s" % (
+                    url, response.status_code))
+            length = int(response.headers['content-length'])
+
+        filepath = os.path.join(self.temp_directory, os.path.basename(url))
+
+        h = MultiHash(length=length)
+        with open(filepath, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=HASH_BLOCK_SIZE):
+                h.update(chunk)
+                f.write(chunk)
+
+        actual_length = os.path.getsize(filepath)
+        if length != actual_length:
+            raise ValueError('Error when checking size: %s != %s' % (
+                length, actual_length))
+
+        hashes = {
+            'length': length,
+            **h.hexdigest()
+        }
+        return filepath, hashes
+
+
+class BaseTarLoader(BufferedLoader):
+    """Base Tarball Loader class.
+
+    This factorizes multiple loader implementations:
+
+      - :class:`RemoteTarLoader`: New implementation able to deal with
+         remote archives.
+
+      - :class:`TarLoader`: Old implementation which dealt with only
+         local archive. It also was only passing along objects to
+         persist (revision, etc...)
+
     """
     CONFIG_BASE_FILENAME = 'loader/tar'
 
     ADDITIONAL_CONFIG = {
-        'extraction_dir': ('string', '/tmp')
+        'working_dir': ('string', '/tmp'),
+        'debug': ('bool', False),  # NOT FOR PRODUCTION
     }
 
     def __init__(self, logging_class='swh.loader.tar.TarLoader', config=None):
         super().__init__(logging_class=logging_class, config=config)
+        self.local_cache = None
         self.dir_path = None
+        working_dir = self.config['working_dir']
+        os.makedirs(working_dir, exist_ok=True)
+        self.temp_directory = mkdtemp(
+            suffix='-%s' % os.getpid(),
+            prefix=TEMPORARY_DIR_PREFIX_PATTERN,
+            dir=working_dir)
+        self.client = ArchiveFetcher(temp_directory=self.temp_directory)
+        os.makedirs(working_dir, 0o755, exist_ok=True)
+        self.dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
+                                         dir=self.temp_directory)
+        self.debug = self.config['debug']
 
-    def load(self, *, tar_path, origin, visit_date, revision,
-             branch_name=None):
-        """Load a tarball in `tarpath` in the Software Heritage Archive.
-
-        Args:
-            tar_path: tarball to import
-            origin (dict): an origin dictionary as returned by
-              :func:`swh.storage.storage.Storage.origin_get_one`
-            visit_date (str): the date the origin was visited (as an
-              isoformatted string)
-            revision (dict): a revision as passed to
-              :func:`swh.storage.storage.Storage.revision_add`, excluding the
-              `id` and `directory` keys (computed from the directory)
-            branch_name (str): the optional branch_name to use for snapshot
+    def cleanup(self):
+        """Clean up temporary disk folders used.
 
         """
-        # Shortcut super() as we use different arguments than the DirLoader.
-        return SWHLoader.load(self, tar_path=tar_path, origin=origin,
-                              visit_date=visit_date, revision=revision,
-                              branch_name=branch_name)
+        if self.debug:
+            self.log.warn('%s Will not clean up temp dir %s' % (
+                DEBUG_MODE, self.temp_directory
+            ))
+            return
+        if os.path.exists(self.temp_directory):
+            self.log.debug('Clean up %s' % self.temp_directory)
+            shutil.rmtree(self.temp_directory)
 
     def prepare_origin_visit(self, *, origin, visit_date=None, **kwargs):
+        """Prepare the origin visit information.
+
+        Args:
+            origin (dict): Dict with keys {url, type}
+            visit_date (str): Date representing the date of the
+              visit. None by default will make it the current time
+              during the loading process.
+
+        """
         self.origin = origin
         if 'type' not in self.origin:  # let the type flow if present
             self.origin['type'] = 'tar'
         self.visit_date = visit_date
 
-    def prepare(self, *, tar_path, origin, revision, visit_date=None,
-                branch_name=None):
-        """1. Uncompress the tarball in a temporary directory.
-           2. Compute some metadata to update the revision.
+    def get_tarball_url_to_retrieve(self):
+        """Compute the tarball url to allow retrieval
 
         """
-        # Prepare the extraction path
-        extraction_dir = self.config['extraction_dir']
-        os.makedirs(extraction_dir, 0o755, exist_ok=True)
-        self.dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
-                                         dir=extraction_dir)
+        raise NotImplementedError()
 
-        # add checksums in revision
+    def fetch_data(self):
+        """Retrieve, uncompress archive and fetch objects from the tarball.
+           The actual ingestion takes place in the :meth:`store_data`
+           implementation below.
 
-        self.log.info('Uncompress %s to %s' % (tar_path, self.dir_path))
-        nature = tarball.uncompress(tar_path, self.dir_path)
+        """
+        url = self.get_tarball_url_to_retrieve()
+        filepath, hashes = self.client.download(url)
+        nature = tarball.uncompress(filepath, self.dir_path)
 
-        if 'metadata' not in revision:
-            artifact = utils.convert_to_hex(hashutil.hash_path(tar_path))
-            artifact['name'] = os.path.basename(tar_path)
-            artifact['archive_type'] = nature
-            artifact['length'] = os.path.getsize(tar_path)
-            revision['metadata'] = {
-                'original_artifact': [artifact],
+        dir_path = self.dir_path.encode('utf-8')
+        directory = Directory.from_disk(path=dir_path, save_path=True)
+        objects = directory.collect()
+        if 'content' not in objects:
+            objects['content'] = {}
+        if 'directory' not in objects:
+            objects['directory'] = {}
+
+        # compute the full revision (with ids)
+        revision = self.build_revision(filepath, nature, hashes)
+        revision = revision_from(directory.hash, revision)
+        objects['revision'] = {
+            revision['id']: revision,
+        }
+
+        snapshot = self.build_snapshot(revision)
+        objects['snapshot'] = {
+            snapshot['id']: snapshot
+        }
+        self.objects = objects
+
+    def store_data(self):
+        """Store the objects in the swh archive.
+
+        """
+        objects = self.objects
+        self.maybe_load_contents(objects['content'].values())
+        self.maybe_load_directories(objects['directory'].values())
+        self.maybe_load_revisions(objects['revision'].values())
+        snapshot = list(objects['snapshot'].values())[0]
+        self.maybe_load_snapshot(snapshot)
+
+
+class RemoteTarLoader(BaseTarLoader):
+    """This is able to load from remote/local archive into the swh
+       archive.
+
+    This will:
+
+    - create an origin (if it does not exist) and a visit
+    - fetch the tarball in a temporary location
+    - uncompress it locally in a temporary location
+    - process the content of the tarball to persist on swh storage
+    - clean up the temporary location
+
+    """
+    def prepare(self, *, last_modified, **kwargs):
+        """last_modified is the time of last modification of the tarball.
+
+        E.g https://ftp.gnu.org/gnu/8sync/:
+            [ ] 8sync-0.1.0.tar.gz	2016-04-22 16:35 	217K
+            [ ] 8sync-0.1.0.tar.gz.sig	2016-04-22 16:35 	543
+            [ ] ...
+
+        Args:
+            origin (dict): Dict with keys {url, type}
+            last_modified (str): The date of last modification of the
+              archive to ingest.
+            visit_date (str): Date representing the date of the
+              visit. None by default will make it the current time
+              during the loading process.
+
+        """
+        self.last_modified = last_modified
+
+    def get_tarball_url_to_retrieve(self):
+        return self.origin['url']
+
+    def build_revision(self, filepath, nature, hashes):
+        """Build the revision with identifier
+
+        We use the `last_modified` date provided by the caller to
+        build the revision.
+
+        """
+        return {
+            **compute_revision(filepath, self.last_modified),
+            'metadata': {
+                'original_artifact': [{
+                    'name': os.path.basename(filepath),
+                    'archive_type': nature,
+                    **hashes,
+                }],
             }
+        }
 
-        branch = branch_name if branch_name else os.path.basename(tar_path)
-
-        super().prepare(dir_path=self.dir_path,
-                        origin=origin,
-                        visit_date=visit_date,
-                        revision=revision,
-                        release=None,
-                        branch_name=branch)
-
-    def cleanup(self):
-        """Clean up temporary directory where we uncompress the tarball.
+    def build_snapshot(self, revision):
+        """Build the snapshot targeting the revision.
 
         """
-        if self.dir_path and os.path.exists(self.dir_path):
-            shutil.rmtree(self.dir_path)
+        branch_name = os.path.basename(self.dir_path)
+        return snapshot_from(revision['id'], branch_name)
 
 
-if __name__ == '__main__':
-    import click
-    import logging
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(process)d %(message)s'
-    )
+class LegacyLocalTarLoader(BaseTarLoader):
+    """This loads local tarball into the swh archive. It's using the
+       revision and branch provided by the caller as scaffolding to
+       create the full revision and snapshot (with identifiers).
 
-    @click.command()
-    @click.option('--archive-path', required=1, help='Archive path to load')
-    @click.option('--origin-url', required=1, help='Origin url to associate')
-    @click.option('--visit-date', default=None,
-                  help='Visit date time override')
-    def main(archive_path, origin_url, visit_date):
-        """Loading archive tryout."""
-        import datetime
-        origin = {'url': origin_url, 'type': 'tar'}
-        commit_time = int(datetime.datetime.now(
-            tz=datetime.timezone.utc).timestamp())
-        swh_person = {
-            'name': 'Software Heritage',
-            'fullname': 'Software Heritage',
-            'email': 'robot@softwareheritage.org'
+       This is what's:
+       - been used to ingest our 2015 rsync copy of gnu.org
+       - still used by the loader deposit
+
+    This will:
+
+    - create an origin (if it does not exist) and a visit
+    - uncompress a tarball in a local and temporary location
+    - process the content of the tarball to persist on swh storage
+    - associate it to a passed revision and snapshot
+    - clean up the temporary location
+
+    """
+    def prepare(self, *, tar_path, revision, branch_name, **kwargs):
+        """Prepare the data prior to ingest it in SWH archive.
+
+        Args:
+            tar_path (str): Path to the archive to ingest
+            revision (dict): The synthetic revision to associate the
+              archive to (no identifiers within)
+            branch_name (str): The branch name to use for the
+              snapshot.
+
+        """
+        self.tar_path = tar_path
+        self.revision = revision
+        self.branch_name = branch_name
+
+    def get_tarball_url_to_retrieve(self):
+        return 'file://%s' % self.tar_path
+
+    def build_revision(self, filepath, nature, hashes):
+        """Build the revision with identifier
+
+        We use the revision provided by the caller as a scaffolding
+        revision.
+
+        """
+        return {
+            **self.revision,
+            'metadata': {
+                'original_artifact': [{
+                    'name': os.path.basename(filepath),
+                    'archive_type': nature,
+                    **hashes,
+                }],
+            }
         }
-        revision = {
-            'date': {'timestamp': commit_time, 'offset': 0},
-            'committer_date': {'timestamp': commit_time, 'offset': 0},
-            'author': swh_person,
-            'committer': swh_person,
-            'type': 'tar',
-            'message': 'swh-loader-tar: synthetic revision message',
-            'metadata': {},
-            'synthetic': True,
-        }
-        TarLoader().load(tar_path=archive_path, origin=origin,
-                         visit_date=visit_date, revision=revision,
-                         branch_name='master')
 
-    main()
+    def build_snapshot(self, revision):
+        """Build the snapshot targeting the revision.
+
+        We use the branch_name provided by the caller as a scaffolding
+        as well.
+
+        """
+        return snapshot_from(revision['id'], self.branch_name)
