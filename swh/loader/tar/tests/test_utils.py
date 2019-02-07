@@ -1,45 +1,43 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import random
 import unittest
-
-from nose.tools import istest
 
 from swh.loader.tar import utils
 
 
-class TestUtils(unittest.TestCase):
-    @istest
-    def convert_to_hex(self):
+class UtilsLib(unittest.TestCase):
+
+    def assert_ok(self, actual_data, expected_data):
+        """Check that actual_data and expected_data matched.
+
+        Actual data is a random block of data.  We want to check its
+        contents match exactly but not the order within.
+
+        """
+        out = []
+        random.shuffle(expected_data)
+        for d in actual_data:
+            self.assertIn(d, expected_data)
+            out.append(d)
+        self.assertEqual(len(out), len(expected_data))
+
+    def test_random_block(self):
+        _input = list(range(0, 9))
         # given
-        input_dict = {
-            'sha1_git': b'\xf6\xb7 \x8b+\xcd \x9fq5E\xe6\x03\xffg\x87\xd7\xb9D\xa1',  # noqa
-            'sha1': b'\xf4O\xf0\xd4\xc0\xb0\xae\xca\xe4C\xab%\x10\xf7\x12h\x1e\x9f\xac\xeb',  # noqa
-            'sha256': b'\xa8\xf9=\xf3\xfek\xa2$\xee\xc7\x1b\xc2\x83\xca\x96\xae8\xaf&\xab\x08\xfa\xb1\x13\xec(.s]\xf6Yb',  # noqa
-            'length': 10,
-        }  # noqa
+        actual_data = utils.random_blocks(_input, 2)
+        self.assert_ok(actual_data, expected_data=_input)
 
-        expected_dict = {'sha1_git': 'f6b7208b2bcd209f713545e603ff6'
-                                     '787d7b944a1',
-                         'sha1': 'f44ff0d4c0b0aecae443ab2510f712681e'
-                                 '9faceb',
-                         'sha256': 'a8f93df3fe6ba224eec71bc283ca96ae3'
-                                   '8af26ab08fab113ec282e735df65962',
-                         'length': 10}
+    def test_random_block2(self):
+        _input = list(range(9, 0, -1))
+        # given
+        actual_data = utils.random_blocks(_input, 4)
+        self.assert_ok(actual_data, expected_data=_input)
 
-        # when
-        actual_dict = utils.convert_to_hex(input_dict)
-
-        # then
-        self.assertDictEqual(actual_dict, expected_dict)
-
-    @istest
-    def convert_to_hex_edge_cases(self):
-        # when
-        actual_dict = utils.convert_to_hex({})
-        # then
-        self.assertDictEqual(actual_dict, {})
-
-        self.assertIsNone(utils.convert_to_hex(None))
+    def test_random_block_with_fillvalue(self):
+        _input = [(i, i+1) for i in range(0, 9)]
+        actual_data = utils.random_blocks(_input, 2)
+        self.assert_ok(actual_data, expected_data=_input)
