@@ -1,74 +1,35 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import itertools
 import random
 
-from swh.model import hashutil
+from swh.core.utils import grouper
 
 
-def convert_to_hex(d):
-    """Convert a flat dictionary with bytes in values to the same dictionary
-    with hex as values.
+def random_blocks(iterable, block=100):
+    """Randomize iterable per block of size block.
 
-    Args:
-        dict: flat dictionary with sha bytes in their values.
+    Given an iterable:
 
-    Returns:
-        Mirror dictionary with values as string hex.
-
-    """
-    if not d:
-        return d
-
-    checksums = {}
-    for key, h in d.items():
-        if isinstance(h, bytes):
-            checksums[key] = hashutil.hash_to_hex(h)
-        else:
-            checksums[key] = h
-
-    return checksums
-
-
-def grouper(iterable, n, fillvalue=None):
-    """Collect data into fixed-length chunks or blocks.
-
-    Args:
-        iterable: an iterable
-        n: size of block
-        fillvalue: value to use for the last block
-
-    Returns:
-        fixed-length chunks of blocks as iterables
-
-    """
-    args = [iter(iterable)] * n
-    return itertools.zip_longest(*args, fillvalue=fillvalue)
-
-
-def random_blocks(iterable, block=100, fillvalue=None):
-    """Given an iterable:
     - slice the iterable in data set of block-sized elements
-    - randomized the data set
-    - yield each element
+    - randomized the block-sized elements
+    - yield each element of that randomized block-sized
+    - continue onto the next block-sized block
 
     Args:
-        iterable: iterable of data
-        block: number of elements per block
-        fillvalue: a fillvalue for the last block if not enough values in
-        last block
+        iterable (Iterable): an iterable
+        block (int): number of elements per block
 
-    Returns:
-        An iterable of randomized per block-size elements.
+    Yields:
+        random element of the iterable
 
     """
     count = 0
-    for iterable in grouper(iterable, block, fillvalue=fillvalue):
+    for iter_ in grouper(iterable, block):
         count += 1
-        lst = list(iterable)
+        lst = list(iter_)
         random.shuffle(lst)
         for e in lst:
             yield e
