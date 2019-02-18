@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: swh.loader.tar
-Version: 0.0.38
+Version: 0.0.39
 Summary: Software Heritage Tarball Loader
 Home-page: https://forge.softwareheritage.org/diffusion/DLDTAR
 Author: Software Heritage developers
