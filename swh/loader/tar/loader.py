@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2018  The Software Heritage developers
+# Copyright (C) 2015-2019  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -132,7 +132,7 @@ class BaseTarLoader(BufferedLoader):
         super().__init__(logging_class=logging_class, config=config)
         self.local_cache = None
         self.dir_path = None
-        working_dir = self.config['working_dir']
+        working_dir = self.config.get('working_dir', tempfile.gettempdir())
         os.makedirs(working_dir, exist_ok=True)
         self.temp_directory = mkdtemp(
             suffix='-%s' % os.getpid(),
@@ -142,7 +142,7 @@ class BaseTarLoader(BufferedLoader):
         os.makedirs(working_dir, 0o755, exist_ok=True)
         self.dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                          dir=self.temp_directory)
-        self.debug = self.config['debug']
+        self.debug = self.config.get('debug', False)
 
     def cleanup(self):
         """Clean up temporary disk folders used.
