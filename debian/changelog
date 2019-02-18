@@ -1,3 +1,13 @@
+swh-loader-tar (0.0.39-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.39     - (tagged by Antoine R. Dumont
+    (@ardumont) <antoine.romain.dumont@gmail.com> on 2019-02-18 11:44:02
+    +0100)
+  * Upstream changes:     - v0.0.39     - tar.loader: Fix default value
+    initialization caveat
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Mon, 18 Feb 2019 10:49:32 +0000
+
 swh-loader-tar (0.0.38-1~swh2) unstable-swh; urgency=medium
 
   * New upstream release, fix debian tree
