@@ -85,6 +85,8 @@ class PrepareDataForTestLoader(BaseLoaderTest):
         self.assertCountReleases(0)
         self.assertCountSnapshots(1)
 
+        return actual_revision
+
 
 class TestRemoteTarLoader(PrepareDataForTestLoader):
     """Test the remote loader scenario (local/remote)
@@ -194,7 +196,6 @@ class TestTarLoader(PrepareDataForTestLoader):
 
     def test_load(self):
         """Load a local tarball should result in persisted swh data
-
         """
         # given
         origin = {
@@ -226,6 +227,10 @@ class TestTarLoader(PrepareDataForTestLoader):
             'type': revision_type,
             'message': revision_message,
             'synthetic': True,
+            'metadata': {
+                'foo': 'bar',
+                'original_artifact': ['bogus_original_artifact'],
+            }
         }
 
         branch_name = os.path.basename(self.tarpath)
@@ -236,4 +241,10 @@ class TestTarLoader(PrepareDataForTestLoader):
                          branch_name=branch_name)
 
         # then
-        self.assert_data_ok()
+        actual_revision = self.assert_data_ok()
+
+        # Check metadata passthrough
+        assert actual_revision['metadata']['foo'] == 'bar'
+
+        # FIXME: use the caplog pytest fixture to check that the clobbering of
+        # original artifact sent a warning

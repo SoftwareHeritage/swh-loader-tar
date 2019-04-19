@@ -18,7 +18,7 @@ from swh.loader.dir.loader import revision_from, snapshot_from
 from swh.model.hashutil import MultiHash, HASH_BLOCK_SIZE
 from swh.model.from_disk import Directory
 
-from .build import compute_revision
+from .build import compute_revision, set_original_artifact
 
 try:
     from _version import __version__
@@ -263,16 +263,12 @@ class RemoteTarLoader(BaseTarLoader):
         build the revision.
 
         """
-        return {
-            **compute_revision(filepath, self.last_modified),
-            'metadata': {
-                'original_artifact': [{
-                    'name': os.path.basename(filepath),
-                    'archive_type': nature,
-                    **hashes,
-                }],
-            }
-        }
+        return set_original_artifact(
+            revision=compute_revision(filepath, self.last_modified),
+            filepath=filepath,
+            nature=nature,
+            hashes=hashes,
+        )
 
     def build_snapshot(self, revision):
         """Build the snapshot targeting the revision.
@@ -325,16 +321,12 @@ class LegacyLocalTarLoader(BaseTarLoader):
         revision.
 
         """
-        return {
-            **self.revision,
-            'metadata': {
-                'original_artifact': [{
-                    'name': os.path.basename(filepath),
-                    'archive_type': nature,
-                    **hashes,
-                }],
-            }
-        }
+        return set_original_artifact(
+            revision=self.revision,
+            filepath=filepath,
+            nature=nature,
+            hashes=hashes,
+        )
 
     def build_snapshot(self, revision):
         """Build the snapshot targeting the revision.
