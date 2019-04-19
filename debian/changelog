@@ -1,3 +1,12 @@
+swh-loader-tar (0.0.40-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.40     - (tagged by Nicolas Dandrimont
+    <nicolas@dandrimont.eu> on 2019-04-19 08:51:58 +0200)
+  * Upstream changes:     - Release swh.loader.tar v0.0.40     - Pass
+    through metadata from the caller
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Fri, 19 Apr 2019 06:58:41 +0000
+
 swh-loader-tar (0.0.39-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.39     - (tagged by Antoine R. Dumont
