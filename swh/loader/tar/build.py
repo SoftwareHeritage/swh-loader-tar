@@ -3,7 +3,14 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import copy
+import logging
+import os
+
 import arrow
+
+
+logger = logging.getLogger(__name__)
 
 
 # Static setup
@@ -74,3 +81,28 @@ def compute_revision(tarpath, last_modified):
         'message': REVISION_MESSAGE,
         'synthetic': True,
     }
+
+
+def set_original_artifact(*, revision, filepath, nature, hashes):
+    """Set the original artifact data on the given revision for
+        the tarball currently being loaded."""
+
+    revision = copy.deepcopy(revision)
+    if 'metadata' not in revision or not revision['metadata']:
+        revision['metadata'] = {}
+    if 'original_artifact' in revision['metadata']:
+        oa = revision['metadata']['original_artifact']
+        if oa:
+            logger.warning(
+                'Revision already contains original_artifact metadata, '
+                'replacing: %r',
+                oa,
+            )
+
+    revision['metadata']['original_artifact'] = [{
+        'name': os.path.basename(filepath),
+        'archive_type': nature,
+        **hashes,
+    }]
+
+    return revision
