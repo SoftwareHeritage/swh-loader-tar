@@ -8,3 +8,4 @@ build/
 dist/
 .eggs
 .tox/
+.mypy_cache/
