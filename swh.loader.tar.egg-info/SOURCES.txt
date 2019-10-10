@@ -16,6 +16,7 @@ swh/loader/tar/__init__.py
 swh/loader/tar/_version.py
 swh/loader/tar/build.py
 swh/loader/tar/loader.py
+swh/loader/tar/py.typed
 swh/loader/tar/tasks.py
 swh/loader/tar/utils.py
 swh/loader/tar/tests/__init__.py
