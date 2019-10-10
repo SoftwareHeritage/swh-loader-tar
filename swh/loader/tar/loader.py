@@ -21,7 +21,7 @@ from swh.model.from_disk import Directory
 from .build import compute_revision, set_original_artifact
 
 try:
-    from _version import __version__
+    from _version import __version__  # type: ignore
 except ImportError:
     __version__ = 'devel'
 
@@ -128,6 +128,8 @@ class BaseTarLoader(BufferedLoader):
         'debug': ('bool', False),  # NOT FOR PRODUCTION
     }
 
+    visit_type = 'tar'
+
     def __init__(self, logging_class='swh.loader.tar.TarLoader', config=None):
         super().__init__(logging_class=logging_class, config=config)
         self.local_cache = None
@@ -169,7 +171,7 @@ class BaseTarLoader(BufferedLoader):
         """
         self.origin = origin
         if 'type' not in self.origin:  # let the type flow if present
-            self.origin['type'] = 'tar'
+            self.origin['type'] = self.visit_type
         self.visit_date = visit_date
 
     def get_tarball_url_to_retrieve(self):
