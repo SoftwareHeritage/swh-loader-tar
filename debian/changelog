@@ -1,3 +1,16 @@
+swh-loader-tar (0.0.41-1~swh1) unstable-swh; urgency=medium
+
+  * New upstream release 0.0.41     - (tagged by Stefano Zacchiroli
+    <zack@upsilon.cc> on 2019-10-10 11:45:19 +0200)
+  * Upstream changes:     - v0.0.41     - * tox.ini: Fix py3 environment
+    to use packaged tests     - * typing: minimal changes to make a no-
+    op mypy run pass     - * Add attribute visit_type.     - * add code
+    of conduct document     - * CONTRIBUTORS: Add Thibault Allançon     -
+    * tox: workaround to pip's inability to properly solve dependency
+    resolution
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 10 Oct 2019 09:48:23 +0000
+
 swh-loader-tar (0.0.40-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.40     - (tagged by Nicolas Dandrimont
