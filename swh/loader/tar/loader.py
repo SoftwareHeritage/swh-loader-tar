@@ -21,7 +21,7 @@ from swh.model.from_disk import Directory
 from .build import compute_revision, set_original_artifact
 
 try:
-    from _version import __version__
+    from _version import __version__  # type: ignore
 except ImportError:
     __version__ = 'devel'
 
